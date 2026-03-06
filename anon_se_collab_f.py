@@ -10,6 +10,7 @@ from datetime import datetime
 import json
 import os
 import html
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -54,8 +55,9 @@ CMIC_SCRIPT = """
 - (공통) 어떤 문화 교류 행사를 기획해 볼 수 있을지 아이디어가 있으신가요?
 """
 
-# 대화 시작 시 챗봇이 보낼 첫 인사 (인사 스크립트)
-CHAT_FIRST_MESSAGE = "안녕하세요! 저는 지금 경영을 전공하고 있는 2학년 학생이에요. 동남아시아에서 유학을 왔어요. 그쪽은 한국 분이신가요? 만나서 반가워요. 어떤 문화 교류 행사를 기획해 볼 수 있을지 아이디어가 있으신가요?"
+# 대화 시작: 1) 타이핑 효과 후 첫 인사, 2) 참가자 답 후 두 번째 인사
+CHAT_FIRST_PART1 = "안녕하세요! 저는 지금 경영을 전공하고 있는 2학년 학생이에요. 동남아시아에서 유학을 왔어요. 그쪽은 한국 분이신가요?"
+CHAT_FIRST_PART2 = "만나서 반가워요. 어떤 문화 교류 행사를 기획해 볼 수 있을지 아이디어가 있으신가요?"
 
 CMIC_SCRIPT += """
 [행사 제안 – 대화 중 최소 2가지 이상 자연스럽게 포함]
@@ -229,22 +231,30 @@ def _chat_page():
     _progress()
     if st.session_state.start_time is None:
         st.session_state.start_time = datetime.now()
-    # 대화 시작 시 챗봇이 인사 스크립트로 첫 메시지 전송
-    if len(st.session_state.messages) == 0:
-        st.session_state.messages.append({"role": "assistant", "content": CHAT_FIRST_MESSAGE})
     rem = _remaining(st.session_state.start_time, CHAT_DURATION)
     time_up = rem <= 0
 
     c1, c2 = st.columns([3, 2])
     with c1:
         st.markdown("### 💬 문화 교류 행사 기획 대화")
-        st.caption("챗봇(동남아 유학생)과 함께 문화 교류 행사를 기획해 보세요.")
     with c2:
         if not time_up:
             _render_timer(rem)
         else:
             st.error("⏱ 시간 종료")
     st.divider()
+
+    # 대화가 비어 있으면 2~3초 타이핑 효과 후 첫 인사(part1) 표시
+    if len(st.session_state.messages) == 0:
+        with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
+            st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
+            components.html(
+                """<style>.td{font-size:1.2rem;letter-spacing:2px;color:#333}.td span{animation:td 0.6s ease-in-out infinite}.td span:nth-child(2){animation-delay:0.2s}.td span:nth-child(3){animation-delay:0.4s}@keyframes td{50%{opacity:0.3}}</style><div class="td"><span>.</span><span>.</span><span>.</span></div>""",
+                height=28,
+            )
+        time.sleep(2.5)
+        st.session_state.messages.append({"role": "assistant", "content": CHAT_FIRST_PART1})
+        st.rerun()
 
     for msg in st.session_state.messages:
         if msg["role"] == "assistant":
@@ -275,17 +285,24 @@ def _chat_page():
         with st.chat_message("user", avatar=AVATAR_USER_NONE):
             _esc = html.escape(prompt).replace("\n", "<br>")
             st.markdown(f'<div class="user-msg-inner">{_esc}</div>', unsafe_allow_html=True)
-        with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
-            st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
-            typing_placeholder = st.empty()
-            with typing_placeholder.container():
-                components.html(
-                    """<style>.td{font-size:1.2rem;letter-spacing:2px;color:#333}.td span{animation:td 0.6s ease-in-out infinite}.td span:nth-child(2){animation-delay:0.2s}.td span:nth-child(3){animation-delay:0.4s}@keyframes td{50%{opacity:0.3}}</style><div class="td"><span>.</span><span>.</span><span>.</span></div>""",
-                    height=28,
-                )
-            reply = get_ai_response(st.session_state.messages, effective_system)
-            typing_placeholder.markdown(reply)
-            st.session_state.messages.append({"role": "assistant", "content": reply})
+        # 첫 턴(챗봇 part1 → 참가자 답): part2로 고정 응답, API 호출 없음
+        if len(st.session_state.messages) == 2:  # [assistant part1, user]
+            with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
+                st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
+                st.markdown(CHAT_FIRST_PART2)
+            st.session_state.messages.append({"role": "assistant", "content": CHAT_FIRST_PART2})
+        else:
+            with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
+                st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
+                typing_placeholder = st.empty()
+                with typing_placeholder.container():
+                    components.html(
+                        """<style>.td{font-size:1.2rem;letter-spacing:2px;color:#333}.td span{animation:td 0.6s ease-in-out infinite}.td span:nth-child(2){animation-delay:0.2s}.td span:nth-child(3){animation-delay:0.4s}@keyframes td{50%{opacity:0.3}}</style><div class="td"><span>.</span><span>.</span><span>.</span></div>""",
+                        height=28,
+                    )
+                reply = get_ai_response(st.session_state.messages, effective_system)
+                typing_placeholder.markdown(reply)
+                st.session_state.messages.append({"role": "assistant", "content": reply})
         st.rerun()
 
 
