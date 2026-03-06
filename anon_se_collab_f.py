@@ -251,7 +251,7 @@ def page_intro():
 """
     )
     pid = st.text_input("참여자 ID", placeholder="예: P001", key="pid_input")
-    if st.button("대화 시작하기 →", type="primary", use_container_width=True):
+    if st.button("대화 시작하기 →", type="primary", use_container_width=True, key="intro_start_btn"):
         if pid and pid.strip():
             st.session_state.participant_id = pid.strip()
             st.session_state.start_time = datetime.now()
@@ -261,6 +261,10 @@ def page_intro():
 
 
 def _chat_page():
+    # 챗봇 대화 페이지에는 '대화 시작하기' 버튼을 두지 않음. ID 없이 들어오면 안내로 돌려보냄.
+    if st.session_state.participant_id is None:
+        st.session_state.current_page = 1
+        st.rerun()
     _progress()
     if st.session_state.start_time is None:
         st.session_state.start_time = datetime.now()
