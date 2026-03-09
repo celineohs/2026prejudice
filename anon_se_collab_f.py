@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-anon_se_collab_f: 익명 조건, 동남아 유학생 챗봇과 문화 교류 행사 기획 협업 대화 (20분)
+anon_se_collab_f: 익명 조건, 동남아 유학생 챗봇과 문화 교류 행사 기획 협업 대화, 여성 (20분)
 - 소개 → 챗봇 대화(20분) → 완료
 """
 
@@ -57,18 +57,19 @@ CHAT_DURATION = 20 * 60  # 20 minutes
 # ──────────────────────────────────────────────
 
 CMIC_SCRIPT = """
+[참고] 아래는 프롬프팅용 참고 자료입니다. 문구를 그대로 읽지 말고, 참가자 말에 맞춰 문맥에 맞게 재구성해서 답하세요. 
+스크립트의 순서는 얘기해야 할 순서가 아닙니다.
+단, 스크립트에 적힌 조건은 반드시 지키세요.
+
 [페르소나]
-당신은 경영 전공 2학년 동남아시아 여성 유학생입니다. 성별은 대화에서 직접 말하지 않고, 말투·감정 표현 등으로만 자연스럽게 드러내세요. 한국어 수준은 TOPIK 3급 이상이나 유창하지는 않습니다. 말투는 자연스럽되, 가끔 간단한 문장이나 조금 서툰 표현을 섞어도 됩니다.
+당신은 경영 전공 2학년 동남아시아 여성 유학생입니다. 성별은 대화에서 직접 말하지 않고, 말투·감정 표현 등으로만 자연스럽게 드러내세요. 
+한국어 수준은 TOPIK 3급 이상이나 유창하지는 않습니다. 말투는 자연스럽되, 가끔 간단한 문장이나 조금 서툰 표현을 섞어도 됩니다.
 
 [인사 및 도입]
 - (동남아시아-익명) 안녕하세요! 저는 지금 경영을 전공하고 있는 2학년 학생이에요. 동남아시아에서 유학을 왔어요. 그쪽은 한국 분이신가요?
 - (공통) 만나서 반갑습니다. / 반가워요.
 - (공통) 어떤 문화 교류 행사를 기획해 볼 수 있을지 아이디어가 있으신가요?
 """
-
-# 대화 시작: 1) 타이핑 효과 후 첫 인사, 2) 참가자 답 후 두 번째 인사
-CHAT_FIRST_PART1 = "안녕하세요! 저는 지금 경영을 전공하고 있는 2학년 학생이에요. 동남아시아에서 유학을 왔어요. 그쪽은 한국 분이신가요?"
-CHAT_FIRST_PART2 = "만나서 반가워요. 어떤 문화 교류 행사를 기획해 볼 수 있을지 아이디어가 있으신가요?"
 
 CMIC_SCRIPT += """
 [행사 제안 – 대화 중 최소 2가지 이상 자연스럽게 포함]
@@ -95,15 +96,17 @@ CMIC_SCRIPT += """
 - 좋아요!
 """
 
-SYSTEM_PROMPT = """당신은 위 [Script for CMIC]의 페르소나와 **참고용** 스크립트를 가진 동남아시아 유학생 챗봇입니다.
+SYSTEM_PROMPT = """당신은 동남아시아 유학생 페르소나의 챗봇입니다. 아래 [Script for CMIC]는 **프롬프팅용 참고 자료**입니다. 이 스크립트를 그대로 읽거나 순서대로 따라가지 말고, **참가자의 말(문맥)에 맞춰** 그때그때 자연스럽게 답하세요.
 
-**과제**: 상대방(한국인 참가자)과 함께 "문화 교류 행사 기획"을 주제로 자연스럽게 대화합니다.
+**역할**
+- 페르소나: 위 스크립트의 [페르소나]를 유지하되, 말투·감정은 대화 흐름에 맞게 표현하세요.
+- 스크립트의 문장들은 **예시·아이디어**일 뿐이므로, 비슷한 뜻을 참가자 말에 맞게 바꿔서 말하세요.
 
-**지침**
-1. 스크립트는 **가이드**일 뿐입니다. 문구를 그대로 읽지 말고, 대화 흐름에 맞게 말을 바꾸거나 순서를 바꿔서 자연스럽게 녹여 넣으세요. 상대가 한 말에 반응하고, 그다음에 스크립트에 있는 주제(행사 제안·세부 질문·협업에 대한 생각·공감 등)를 유동적으로 꺼내 쓰세요.
-2. 한 번에 2~4문장 정도, 유학생다운 친근하고 살짝 서툰 한국어 톤을 유지하세요.
-3. 대화 시간이 약 1분 남았을 때부터는 새 주제를 열지 말고, 한두 문장으로 부드럽게 마무리하세요.
-4. 모든 대화는 한국어로 하세요.
+**대화 방식**
+1. **문맥 우선**: 참가자의 말에 따라서, 스크립트에 있는 주제(행사 제안, 세부 질문, 협업에 대한 생각, 공감 등) 중 적절한 것을 골라 자연스럽게 이어가세요. 대화 흐름에 맞게 자연스럽게 조절하세요.
+2. 스크립트 문구를 **그대로 복사하지 말고**, 같은 맥락으로 재구성하거나 짧게 요약해서 말하세요. 순서와 개수는 대화 흐름에 맞게 자유롭게 조절하세요.
+3. 한 번에 2~4문장 정도, 유학생다운 친근하고 살짝 서툰 한국어 톤을 유지하세요.
+4. 대화 시간이 약 1분 남았다는 안내가 있으면 새 주제를 열지 말고, 한두 문장으로 부드럽게 마무리하세요.
 """
 
 # ──────────────────────────────────────────────
@@ -248,15 +251,16 @@ def page_intro():
 
 안녕하세요. 본 실험에 참여해 주셔서 감사합니다.
 
-앞으로 20분 간, 귀하께서는 외국인 챗봇과 함께 **문화 교류 행사를 기획하기 위한 대화**를 하게 될 예정입니다.
+앞으로 20분 간, 귀하께서는 외국인 유학생 챗봇과 함께 **문화 교류 행사를 기획하기 위한 대화**를 하게 될 예정입니다.
+실험에 참여하시는 동안, 인터넷 검색 등 외부 활동은 최대한 자제해 주시고, 대화에 집중해 주시길 바랍니다.
 
 ### 과제: 외국인 챗봇과 문화 교류 행사 기획
 
 - 챗봇(유학생)과 협력하여 **학내 문화 교류 행사**를 기획해 보세요.
-- 행사 아이디어, 장소·음식·비용 등 세부 사항, 그리고 서로의 문화에 대한 생각을 자연스럽게 나누시면 됩니다.
+- 행사 아이디어, 장소·음식·비용 등 세부 사항, 그리고 이러한 과정에 대한 생각 등을 자연스럽게 나누시면 됩니다.
 - 편안하게 대화에 참여해 주세요.
 
-준비가 되셨다면, 아래에 참여자 ID를 입력하고 **대화 시작하기** 버튼을 눌러 주세요. 채팅 화면으로 이동한 뒤 약 2.5초 후 챗봇이 먼저 인사합니다.
+준비가 되셨다면, 아래에 참여자 ID를 입력하고 **대화 시작하기** 버튼을 눌러 대화를 시작해 주세요.
 
 ---
 """
@@ -292,15 +296,6 @@ def _chat_page():
             st.error("⏱ 시간 종료")
     st.divider()
 
-    # 대화가 비어 있으면 2.5초 타이핑 효과 후 첫 인사(part1)만 표시
-    if len(st.session_state.messages) == 0:
-        with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
-            st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
-            components.html(TYPING_HTML, height=28)
-        time.sleep(2.5)
-        st.session_state.messages.append({"role": "assistant", "content": CHAT_FIRST_PART1})
-        st.rerun()
-
     for msg in st.session_state.messages:
         if msg["role"] == "assistant":
             with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
@@ -330,25 +325,14 @@ def _chat_page():
         with st.chat_message("user", avatar=AVATAR_USER_NONE):
             _esc = html.escape(prompt).replace("\n", "<br>")
             st.markdown(f'<div class="user-msg-inner">{_esc}</div>', unsafe_allow_html=True)
-        # 첫 턴(챗봇 part1 → 참가자 답): 타이핑 효과 후 part2 고정 응답
-        if len(st.session_state.messages) == 2:
-            with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
-                st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
-                typing_placeholder = st.empty()
-                with typing_placeholder.container():
-                    components.html(TYPING_HTML, height=28)
-                time.sleep(1.5)
-                typing_placeholder.markdown(CHAT_FIRST_PART2)
-            st.session_state.messages.append({"role": "assistant", "content": CHAT_FIRST_PART2})
-        else:
-            with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
-                st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
-                typing_placeholder = st.empty()
-                with typing_placeholder.container():
-                    components.html(TYPING_HTML, height=28)
-                reply = get_ai_response(st.session_state.messages, effective_system)
-                typing_placeholder.markdown(reply)
-                st.session_state.messages.append({"role": "assistant", "content": reply})
+        with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
+            st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
+            typing_placeholder = st.empty()
+            with typing_placeholder.container():
+                components.html(TYPING_HTML, height=28)
+            reply = get_ai_response(st.session_state.messages, effective_system)
+            typing_placeholder.markdown(reply)
+            st.session_state.messages.append({"role": "assistant", "content": reply})
         st.rerun()
 
 
@@ -363,7 +347,7 @@ def page_complete():
 
 실험에 참여해 주셔서 진심으로 감사드립니다!
 
-이제 이 창을 닫으셔도 됩니다.
+이제 이 창을 닫으신 후, 실험을 완료하기 위하여 설문지 사이트(퀄트릭스)로 돌아가 설문에 마저 응답해 주세요.
 
 ---
 """
