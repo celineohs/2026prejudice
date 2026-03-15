@@ -62,7 +62,7 @@ AVATAR_USER_NONE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALA
 st.markdown(
     """
     <style>
-    .block-container { padding-top: 1.5rem; padding-bottom: 1rem; padding-left: 2.5rem; padding-right: 2.5rem; }
+    .block-container { padding-top: 1.5rem; padding-bottom: 1rem; padding-left: 1.25rem; padding-right: 1.25rem; }
     [data-testid="stChatMessage"] { font-size: 1.08rem !important; }
     [data-testid="stChatMessage"] img { width: 60px !important; height: 60px !important; min-width: 60px !important; min-height: 60px !important; border-radius: 8px; }
     .anon-name { font-size: 1.2rem !important; font-weight: 600 !important; margin-bottom: 0.2rem !important; margin-top: 0 !important; line-height: 1.2 !important; }
