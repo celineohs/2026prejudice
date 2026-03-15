@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 study1_a_profile_collab: 프로필 사진 조건, 이름 "Ayu Lestari", 동남아 유학생 챗봇과 문화 교류 행사 부스 기획 협업 대화 (20분)
-- study1_a_anon_collab와 플랫폼 차이 없음. 익명 대신 프로필 이미지 + Elena Novak 사용.
+- study1_a_anon_collab와 플랫폼 차이 없음. 익명 대신 프로필 이미지 + Ayu Lestari 사용.
 """
 
 import streamlit as st
@@ -9,7 +9,6 @@ import streamlit.components.v1 as components
 from datetime import datetime
 import json
 import os
-import base64
 import html
 import time
 import zipfile
@@ -18,31 +17,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# 프로필 사진: base64로 임베드하여 모든 환경에서 동일하게 표시
+# 프로필 사진: GitHub에 asian_f.jpg로 올려 둔 파일 사용 (스크립트와 같은 디렉터리)
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROFILE_IMAGE_PATH = os.path.join(
-    _SCRIPT_DIR,
-    "Study 1",
-    "Stimulus",
-    "MEBeauty_2차검수",
-    "female_asian",
-    "_asian-girl-3113208_1920.jpg",
-)
+PROFILE_IMAGE_PATH = os.path.join(_SCRIPT_DIR, "asian_f.jpg")
 AVATAR_FALLBACK = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMjAyMDIwIi8+PC9zdmc+"
 
 
-def _image_to_data_url(path: str) -> str:
-    if not path or not os.path.isfile(path):
-        return None
+def _load_avatar_image():
+    """프로필 이미지: PIL Image 우선, 실패 시 파일 경로, 없으면 fallback SVG."""
+    if not PROFILE_IMAGE_PATH or not os.path.isfile(PROFILE_IMAGE_PATH):
+        return AVATAR_FALLBACK
     try:
-        with open(path, "rb") as f:
-            b = f.read()
-        return "data:image/jpeg;base64," + base64.b64encode(b).decode("ascii")
+        from PIL import Image
+        return Image.open(PROFILE_IMAGE_PATH).convert("RGB")
     except Exception:
-        return None
+        return PROFILE_IMAGE_PATH  # 경로 문자열로 시도
 
 
-AVATAR_PARTNER = _image_to_data_url(PROFILE_IMAGE_PATH) or AVATAR_FALLBACK
+_AVATAR_IMAGE = _load_avatar_image()
+AVATAR_PARTNER = _AVATAR_IMAGE
 PARTNER_NAME = "Ayu Lestari"
 SAVE_PREFIX = "study1_a_profile_collab"
 

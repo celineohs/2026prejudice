@@ -1,4 +1,5 @@
 streamlit>=1.28.0
+Pillow>=10.0.0
 openai>=1.3.0
 python-dotenv>=1.0.0
 pandas>=2.0.0
@@ -8,3 +9,7 @@ pandas>=2.0.0
 anthropic>=0.39.0
 # pip install google-generativeai
 google-generativeai>=0.8.0
+
+# Google Drive 업로드 (대화 로그 저장)
+google-auth>=2.0.0
+google-api-python-client>=2.0.0
