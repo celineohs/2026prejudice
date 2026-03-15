@@ -53,7 +53,8 @@ def _get_env(key: str, default: str = None) -> str:
 st.set_page_config(
     page_title="외국인 챗봇과 문화 교류 행사 부스 기획",
     page_icon="💬",
-    layout="centered",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # GPT 스타일 채팅: 왼쪽=파트너(프로필+이름), 오른쪽=사용자(프로필 없음)
@@ -62,8 +63,10 @@ AVATAR_USER_NONE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALA
 st.markdown(
     """
     <style>
-    section.main .block-container { padding: 0.5rem 1rem 0.5rem 1rem; max-width: 95%; }
-    .block-container { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    [data-testid="stAppViewContainer"] { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+    section.main { padding: 0 !important; }
+    section.main .block-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+    .block-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
     [data-testid="stChatMessage"] img { width: 52px !important; height: 52px !important; min-width: 52px !important; min-height: 52px !important; border-radius: 8px; }
     .anon-name { font-size: 1.1rem !important; font-weight: 600 !important; margin-bottom: 0.2rem !important; margin-top: 0 !important; line-height: 1.2 !important; }
     [data-testid="stChatMessage"] .anon-name + * { margin-top: 0.2rem !important; }
