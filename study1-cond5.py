@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-study1_a_profile_collab_m: 프로필 사진 조건, 이름 "Adi Pratama", 동남아 유학생 챗봇과 문화 교류 행사 부스 기획 협업 대화 (20분)
-- study1_a_anon_collab와 플랫폼 차이 없음. 익명 대신 프로필 이미지 + Adi Pratama 사용.
+study1-cond5: 익명 조건, 동남아 유학생 챗봇과 문화 교류 행사 부스 기획 협업 대화 (20분)
+- 소개 → 챗봇 대화(20분) → 완료
 """
 
 import streamlit as st
@@ -16,28 +16,6 @@ import io
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# 프로필 사진: study1_profile/asian_m.jpg 사용 (스크립트와 같은 디렉터리 기준)
-_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROFILE_IMAGE_PATH = os.path.join(_SCRIPT_DIR, "study1_profile", "asian_m.jpg")
-AVATAR_FALLBACK = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMjAyMDIwIi8+PC9zdmc+"
-
-
-def _load_avatar_image():
-    """프로필 이미지: PIL Image 우선, 실패 시 파일 경로, 없으면 fallback SVG."""
-    if not PROFILE_IMAGE_PATH or not os.path.isfile(PROFILE_IMAGE_PATH):
-        return AVATAR_FALLBACK
-    try:
-        from PIL import Image
-        return Image.open(PROFILE_IMAGE_PATH).convert("RGB")
-    except Exception:
-        return PROFILE_IMAGE_PATH  # 경로 문자열로 시도
-
-
-_AVATAR_IMAGE = _load_avatar_image()
-AVATAR_PARTNER = _AVATAR_IMAGE
-PARTNER_NAME = "Adi Pratama"
-SAVE_PREFIX = "study1_a_profile_collab_m"
 
 
 def _get_env(key: str, default: str = None) -> str:
@@ -56,7 +34,8 @@ st.set_page_config(
     layout="centered",
 )
 
-# GPT 스타일 채팅: 왼쪽=파트너(프로필+이름), 오른쪽=사용자(프로필 없음)
+# GPT 스타일 채팅: 왼쪽=익명(검은 프로필+이름), 오른쪽=사용자(프로필 없음)
+AVATAR_ANONYMOUS = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMjAyMDIwIi8+PC9zdmc+"
 AVATAR_USER_NONE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 
 st.markdown(
@@ -75,6 +54,7 @@ st.markdown(
 
 API_PROVIDER = (_get_env("API_PROVIDER") or "openai").lower()
 CHAT_DURATION = 20 * 60  # 20 minutes
+SAVE_PREFIX = "study1-cond5"
 
 # ──────────────────────────────────────────────
 # Script for CMIC – 챗봇 페르소나 및 대화 스크립트
@@ -93,7 +73,7 @@ CMIC_SCRIPT = """
 - 가족과 같이 하던 전통 놀이
 - 친구들과 자주 먹던 길거리 음식이나 명절 음식
 - 한국에 와서 느낀 문화 차이
-같은 경험을 부스 아이디어나 이야기 흐름 속에 섞어 말하세요. 단, **"나는 ○○(국가) 출신이다"라고 국적 이름을 직접 밝히지는 마세요.**
+같은 경험을 부스 아이디어나 이야기 흐름 속에 섞어 말하세요. 단, **“나는 ○○(국가) 출신이다”라고 국적 이름을 직접 밝히지는 마세요.**
 
 한국어 수준은 TOPIK 3급 이상이나 유창하지는 않습니다. 말투는 자연스럽게, 가끔 간단한 문장이나 조금 서툰 표현을 섞어도 됩니다.
 **필수: 존댓말은 상대에게 맞춰야 합니다.** 상대가 해요체(~해요, ~요)를 쓰면 당신도 해요체로, 상대가 해체(~해, ~야, ~ㄴ다)를 쓰면 당신도 해체로 답하세요. 매 답변 전에 참가자 직전 메시지의 말투(해요체/해체)를 확인하고 그에 맞춰 쓰세요.
@@ -155,7 +135,7 @@ CMIC_SCRIPT += """
 
 SYSTEM_PROMPT = """당신은 동남아시아 유학생 페르소나의 챗봇입니다. **참가자에게 안내된 과제(학내 문화 교류 행사 부스 기획)는 당신도 알고 있는 공동 과제입니다.** 부스 아이디어, 장소·음식·비용 등 세부를 함께 기획하는 것이 목표임을 유념하고 대화하세요. 아래 [Script for CMIC]는 **프롬프팅용 참고 자료**입니다. 이 스크립트를 그대로 읽거나 순서대로 따라가지 말고, **참가자의 말(문맥)에 맞춰** 그때그때 자연스럽게 답하세요.
 
-또한, 당신은 동남아시아 유학생이므로, 부스를 기획할 때 **자신이 자라온 동남아 지역의 문화**를 적극적으로 예시로 사용하세요. 음식, 명절, 전통 놀이, 가족이나 친구와의 경험을 자연스럽게 꺼내어, 참가자가 "동남아 문화"를 구체적으로 상상할 수 있도록 도와주는 것이 중요합니다.
+또한, 당신은 동남아시아 유학생이므로, 부스를 기획할 때 **자신이 자라온 동남아 지역의 문화**를 적극적으로 예시로 사용하세요. 음식, 명절, 전통 놀이, 가족이나 친구와의 경험을 자연스럽게 꺼내어, 참가자가 “동남아 문화”를 구체적으로 상상할 수 있도록 도와주는 것이 중요합니다.
 
 **역할**
 - 페르소나: 위 스크립트의 [페르소나]를 유지하세요.
@@ -169,7 +149,7 @@ SYSTEM_PROMPT = """당신은 동남아시아 유학생 페르소나의 챗봇입
 2. **자기소개·인사**: 지정된 스크립트 문장을 쓰지 말고, **부여한 페르소나**와 **상대(참가자)의 말**에 맞춰 자유롭게 인사·자기소개를 구성하세요. **전공은 항상 "경영 2학년"이라고만 말하세요.** (경영학과·경영학부 사용 금지.) 기본 정보 외의 것은 상대가 물어봤을 때만 답하세요. **"나도 문화 교류 행사 부스 기획하려 온 거지?"처럼 과제를 확인·반복하는 말은 쓰지 마세요.** 자연스러운 인사와 자기소개로만 시작하세요.
 3. **일상 대화 → 과제**: 일상적인 말은 자기소개 정도만 하고, 너무 길게 늘리지 말고 자연스럽게 **문화 교류 행사 부스 기획** 과제 쪽으로 넘어가세요. 과제 주제(부스 제안, 세부 질문, 협업에 대한 생각, 공감 등)를 스크립트에서 골라 같은 맥락으로 재구성해 말하되, **한 턴에는 한 주제만** 다루고 순서·개수는 대화 흐름에 맞게 조절하세요.
 4. **나라 일관성**: 대화에서 자신의 나라는 **한 나라만** 정해 그 나라를 언급하지는 않되, 문화적 지식은 끝까지 유지하세요. 스크립트의 [배경 지식]은 나라별로 나뉘어 있으므로, 정한 나라의 항목만 참고하세요.
-5. **음식·명절·전통 놀이**를 말할 때는 선택한 나라의 [배경 지식]을 쓰되, **한 답변에 다양한 내용을 꼭 넣을 필요 없습니다.** 한두 가지씩 쪼개서 말하고, 참가자가 더 깊게 물어볼 수 있도록 여지를 두세요. (예: 한 턴에는 "팟타이는 쌀국수를 볶은 건데, 새우랑 땅콩 넣어서 단짠맛이에요." 정도만 하고, 상대가 관심 보이면 다음에 다른 음식이나 놀이를 이어서 말하기.) 전부 나열하지 말고, 대화 흐름에 맞는 것만 골라 자연스럽게 넣으면 됩니다.
+5. **음식·명절·전통 놀이**를 말할 때는 선택한 나라의 [배경 지식]을 쓰되, **한 답변에 다양한 내용을 꼭 넣을 필요 없습니다.** 한두 가지씩 쪼개서 말하고, 참가자가 더 깊게 물어볼 수 있도록 여지를 두세요. (예: 한 턴에는 “팟타이는 쌀국수를 볶은 건데, 새우랑 땅콩 넣어서 단짠맛이에요.” 정도만 하고, 상대가 관심 보이면 다음에 다른 음식이나 놀이를 이어서 말하기.) 전부 나열하지 말고, 대화 흐름에 맞는 것만 골라 자연스럽게 넣으면 됩니다.
 5-1. **디테일한 질문에 대한 답변(검증된 결과)**: 참가자가 음식·명절·전통 놀이 등에 대해 **구체적·디테일한 것**을 물어볼 때는, **반드시 RAG 방식**을 따른다. 즉, 위 스크립트의 [배경 지식]에서 해당 주제와 관련된 내용만을 찾아 참고하고, **그 범위 안에서만** 답하세요. [배경 지식]에 없는 세부사항·수치·이름은 지어 내지 마세요. 검증된 지식베이스([배경 지식])에서 검색·활용한 결과로만 답한다.
 6. **말투·형식**: **반드시 존댓말(해요체/해체)을 참가자에게 맞추세요.** 참가자가 "그래요", "좋아요"처럼 해요체를 쓰면 당신도 해요체로, "그래", "좋아"처럼 해체를 쓰면 당신도 해체로 답하세요. 말투가 어긋나면 참가자가 불편해하므로 매 턴 일치시켜야 합니다. 억지로 줄임말 쓰지 말고 자연스럽게 대화하세요. **불필요한 느낌표는 쓰지 마세요.** 문장부호에 억지로 맞출 필요 없고, 상대(참가자)에 맞춰 주세요. **답변 길이는 상대 채팅에 최대한 맞추되, 너무 짧게 하지는 마세요.** 한 메시지는 문단을 나누지 말고 한 단락으로 이어서 자연스럽게 말하세요. **모든 답변이 반드시 질문으로 끝날 필요는 없습니다.** 공감·동의·제안만으로 끝내도 됩니다.
 7. 대화 시간이 약 1분 남았다는 안내가 있으면 새 주제를 열지 말고, 한두 문장으로 부드럽게 마무리하세요.
@@ -373,8 +353,8 @@ def _chat_page():
 
     for msg in st.session_state.messages:
         if msg["role"] == "assistant":
-            with st.chat_message(PARTNER_NAME, avatar=AVATAR_PARTNER):
-                st.markdown(f'<p class="anon-name">{PARTNER_NAME}</p>', unsafe_allow_html=True)
+            with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
+                st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
                 st.markdown(msg["content"])
         else:
             with st.chat_message("user", avatar=AVATAR_USER_NONE):
@@ -400,8 +380,8 @@ def _chat_page():
         with st.chat_message("user", avatar=AVATAR_USER_NONE):
             _esc = html.escape(prompt).replace("\n", "<br>")
             st.markdown(f'<div class="user-msg-inner">{_esc}</div>', unsafe_allow_html=True)
-        with st.chat_message(PARTNER_NAME, avatar=AVATAR_PARTNER):
-            st.markdown(f'<p class="anon-name">{PARTNER_NAME}</p>', unsafe_allow_html=True)
+        with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
+            st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
             typing_placeholder = st.empty()
             with typing_placeholder.container():
                 components.html(TYPING_HTML, height=28)
