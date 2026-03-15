@@ -41,7 +41,8 @@ AVATAR_USER_NONE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALA
 st.markdown(
     """
     <style>
-    .block-container { padding-top: 1.5rem; padding-bottom: 1rem; }
+    section.main .block-container { padding: 0.5rem 1rem 0.5rem 1rem; max-width: 95%; }
+    .block-container { padding-top: 0.5rem; padding-bottom: 0.5rem; }
     [data-testid="stChatMessage"] img { width: 52px !important; height: 52px !important; min-width: 52px !important; min-height: 52px !important; border-radius: 8px; }
     .anon-name { font-size: 1.1rem !important; font-weight: 600 !important; margin-bottom: 0.2rem !important; margin-top: 0 !important; line-height: 1.2 !important; }
     [data-testid="stChatMessage"] .anon-name + * { margin-top: 0.2rem !important; }

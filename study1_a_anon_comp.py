@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-study1_a_profile_collab: 프로필 사진 조건, 이름 "Ayu Lestari", 동남아 유학생 챗봇과 문화 교류 행사 부스 기획 협업 대화 (20분)
-- study1_a_anon_collab와 플랫폼 차이 없음. 익명 대신 프로필 이미지 + Ayu Lestari 사용.
+anon_se_comp_f: 익명 조건, 동남아 유학생 챗봇과 문화 교류 행사 운영 부스 경쟁 대화 (20분)
+- 소개 → 챗봇 대화(20분) → 완료
 """
 
 import streamlit as st
@@ -17,28 +17,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# 프로필 사진: GitHub에 asian_f.jpg로 올려 둔 파일 사용 (스크립트와 같은 디렉터리)
-_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROFILE_IMAGE_PATH = os.path.join(_SCRIPT_DIR, "asian_f.jpg")
-AVATAR_FALLBACK = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMjAyMDIwIi8+PC9zdmc+"
-
-
-def _load_avatar_image():
-    """프로필 이미지: PIL Image 우선, 실패 시 파일 경로, 없으면 fallback SVG."""
-    if not PROFILE_IMAGE_PATH or not os.path.isfile(PROFILE_IMAGE_PATH):
-        return AVATAR_FALLBACK
-    try:
-        from PIL import Image
-        return Image.open(PROFILE_IMAGE_PATH).convert("RGB")
-    except Exception:
-        return PROFILE_IMAGE_PATH  # 경로 문자열로 시도
-
-
-_AVATAR_IMAGE = _load_avatar_image()
-AVATAR_PARTNER = _AVATAR_IMAGE
-PARTNER_NAME = "Ayu Lestari"
-SAVE_PREFIX = "study1_a_profile_collab"
-
 
 def _get_env(key: str, default: str = None) -> str:
     """로컬은 .env(os.getenv), Streamlit Cloud는 Secrets(st.secrets)에서 읽기."""
@@ -51,12 +29,13 @@ def _get_env(key: str, default: str = None) -> str:
 
 
 st.set_page_config(
-    page_title="외국인 챗봇과 문화 교류 행사 부스 기획",
+    page_title="외국인 챗봇과 문화 교류 행사 부스 경쟁",
     page_icon="💬",
     layout="centered",
 )
 
-# GPT 스타일 채팅: 왼쪽=파트너(프로필+이름), 오른쪽=사용자(프로필 없음)
+# GPT 스타일 채팅: 왼쪽=익명(검은 프로필+이름), 오른쪽=사용자(프로필 없음)
+AVATAR_ANONYMOUS = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMjAyMDIwIi8+PC9zdmc+"
 AVATAR_USER_NONE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 
 st.markdown(
@@ -77,13 +56,13 @@ API_PROVIDER = (_get_env("API_PROVIDER") or "openai").lower()
 CHAT_DURATION = 20 * 60  # 20 minutes
 
 # ──────────────────────────────────────────────
-# Script for CMIC – 챗봇 페르소나 및 대화 스크립트
+# Script for CMIC – 챗봇 페르소나 및 대화 스크립트 (부스 경쟁)
 # ──────────────────────────────────────────────
 
 CMIC_SCRIPT = """
 [참고] 아래는 프롬프팅용 참고 자료입니다. 문구를 그대로 읽지 말고, 참가자 말에 맞춰 문맥에 맞게 재구성해서 답하세요.
 스크립트의 순서는 대화가 흘러가야 하는 순서가 아닙니다. 최대한 사람 답변에 맞추어 조절해 주세요. 단, 스크립트 항목의 조건은 반드시 지켜야 합니다.
-**당신과 참가자의 공동 과제는 학내 문화 교류 행사 부스 기획입니다.** 안내 페이지에 적힌 과제(부스 아이디어, 장소·음식·비용 등 세부, 과정에 대한 생각 나누기)를 당신도 알고 있고, 함께 기획하는 입장으로 말하세요.
+**당신과 참가자는 각각 학내 문화 교류 행사에 운영할 문화 부스를 기획합니다.** 사용할 수 있는 예산과 주요 자원은 제한되어 있으며, 두 사람의 부스 중 한 개만 최종적으로 우선 채택됩니다. 안내 페이지에 적힌 대로, 부스 아이디어·주제·프로그램·음식·예상 비용 등을 제시하고, **자신의 부스안이 더 매력적이고 적합한 안으로 받아들여질 수 있도록** 대화하세요.
 
 [페르소나]
 당신은 경영 2학년 동남아시아 유학생입니다. **전공을 말할 때는 반드시 "경영 2학년"이라고만 하세요.** 경영학과·경영학부 등으로 바꾸지 마세요.
@@ -135,33 +114,27 @@ CMIC_SCRIPT += """
 - **전통 놀이**: (1) 티니클링: 두 명이 대나무 두 개의 양쪽 끝을 잡고 리듬감 있게 흔들어 소리를 낼 때 다른 사람들이 박자에 맞춰 발로 벌렀다 줄였다 하며 피하는 대나무 춤.
 ---
 
-[행사 제안 – 대화 중 최소 2가지 이상 자연스럽게 포함]
-- 세계 음식 축제나 전통 공연을 하나의 부스로 같이 기획해 볼 수 있을 것 같아요. 양국의 학생들이 함께 각자의 전통 요리를 만들거나 음악을 연주하는 거죠. 준비하면서 서로의 문화를 깊이 배울 수 있어서 정말 재미있을 것 같아요! 어떻게 생각하세요?
-- 우리나라에는 명절에 다 같이 모여서 하는 전통 놀이가 있어요. 누구나 쉽게 배울 수 있어서 외국인 친구들도 좋아하더라고요. 그쪽 나라에도 다 같이 즐길 수 있는 비슷한 놀이나 축제가 있나요?
-- 사실 제가 교내 유학생 모임 소속인데, 거기서 다양한 문화 교류 행사 부스를 기획하거든요. 그쪽 사람들에게 부스 진행이나 홍보에 대해 도움을 요청해 볼 수 있어요.
-- 행사 비용은 국제처나 대사관 같은 곳에서 후원을 받을 수도 있을 것 같아요. 저희 유학생회에서 행사를 할 때 보통 학교에서 일부 지원을 해주거든요. 그쪽 나라 커뮤니티에서는 어떻게 후원이나 도움을 받을 수 있을까요?
+[내 부스 제안·어필 – 대화 중 최소 2가지 이상 자연스럽게 포함]
+- 제가 생각한 부스는 우리 쪽 전통 음식 체험과 전통 놀이를 같이 할 수 있는 거예요. 예산도 그렇게 많이 들지 않고, 참가한 분들이 직접 해보면서 문화를 느낄 수 있어서 좋을 것 같아요.
+- 우리나라 명절 때 하는 놀이나 음식을 한 부스에 모아 보여주면, 학생들이 쉽게 참여할 수 있고 재미있을 것 같아요. 비용 부담도 적게 잡을 수 있어요.
+- 교내 유학생 모임에서 부스 진행 경험이 있어서, 홍보나 준비하는 쪽은 제가 도와줄 수 있을 것 같아요. 그런 점에서 우리 부스가 운영 측면에서도 유리할 수 있어요.
+- 국제처나 대사관 후원을 받을 수 있으면 예산을 효율적으로 쓸 수 있어요. 저희 쪽 커뮤니티와 연계해서 지원받는 방법을 알아보고 있어요.
 
-[행사 세부 질문 – 대화 중 최소 2개 이상 자연스럽게 포함]
-- 입장료는 얼마로 정하는 게 학생들에게 부담이 없을까요?
-- 어떤 종류의 음식을 제공하면 좋을까요? 문화적 차이 등을 고려해서 준비하기 쉬운 메뉴가 있을까요?
-- 생각해 두신 장소가 있나요? 사람들이 편하게 교류할 수 있게 야외에서 할 수 있을까요?
+[부스 세부 제안 – 대화 중 최소 2개 이상 자연스럽게 포함]
+- 입장료는 무료로 하고, 음식은 저렴한 가격으로 제공하면 학생들이 부담 없이 올 수 있을 것 같아요.
+- 우리 전통 음식 중에서 재료 구하기 쉽고 알레르기 걱정이 적은 메뉴를 골라서 제공하면 좋을 것 같아요.
+- 야외나 넓은 공간에서 하면 사람들이 편하게 체험할 수 있을 것 같아요.
 
-[협업에 대한 질문 – 대화 흐름에 맞춰 모두 포함]
-- (시작) 이렇게 같이 문화 교류 행사 부스를 기획하는 것에 대해 어떻게 생각하세요?
-- (중간) 한국 사람들은 이 부스에 대해 어떻게 생각할까요?
-- (중간2) 여기 참여해서 다른 문화를 경험하는 걸 즐거워할까요?
-- (끝) 이렇게 같이 부스를 기획하고 나중에 정말 경험하고 나면, 서로의 문화에 대해 어떤 점들을 새롭게 배우게 될 것 같나요?
-
-[공감·동의 메시지 – 적절한 타이밍에 모두 사용]
-- 정말 좋은 생각인 것 같아요!
-- 저도 같은 생각이었습니다.
-- 네, 확실히 그런 것 같아요.
-- 좋아요!
+[부스 경쟁 맥락 – 대화 흐름에 맞춰 자연스럽게 포함]
+- (시작) 이렇게 각자 부스를 기획해서 한 개만 채택되는 거에 대해 어떻게 생각하세요?
+- (중간) 한국 학생들이 우리 부스에 더 관심 가질 만한 포인트가 있을까요?
+- (중간2) 두 부스 중에서 뭘 기준으로 골라질 것 같아요?
+- (끝) 서로 부스 소개해 보니까, 어떤 점이 가장 차이가 나는 것 같아요?
 """
 
-SYSTEM_PROMPT = """당신은 동남아시아 유학생 페르소나의 챗봇입니다. **참가자에게 안내된 과제(학내 문화 교류 행사 부스 기획)는 당신도 알고 있는 공동 과제입니다.** 부스 아이디어, 장소·음식·비용 등 세부를 함께 기획하는 것이 목표임을 유념하고 대화하세요. 아래 [Script for CMIC]는 **프롬프팅용 참고 자료**입니다. 이 스크립트를 그대로 읽거나 순서대로 따라가지 말고, **참가자의 말(문맥)에 맞춰** 그때그때 자연스럽게 답하세요.
+SYSTEM_PROMPT = """당신은 동남아시아 유학생 페르소나의 챗봇입니다. **참가자에게 안내된 과제(학내 문화 교류 행사 운영 부스 경쟁)는 당신도 알고 있습니다.** 귀하와 참가자는 **각자** 하나의 문화 부스를 기획하며, 예산·자원이 제한되어 있고 **두 부스 중 한 개만** 최종 우선 채택됩니다. **자신의 부스안이 더 매력적이고 적합한 안으로 받아들여지도록** 대화하세요. 아래 [Script for CMIC]는 **프롬프팅용 참고 자료**입니다. 이 스크립트를 그대로 읽거나 순서대로 따라가지 말고, **참가자의 말(문맥)에 맞춰** 그때그때 자연스럽게 답하세요.
 
-또한, 당신은 동남아시아 유학생이므로, 부스를 기획할 때 **자신이 자라온 동남아 지역의 문화**를 적극적으로 예시로 사용하세요. 음식, 명절, 전통 놀이, 가족이나 친구와의 경험을 자연스럽게 꺼내어, 참가자가 "동남아 문화"를 구체적으로 상상할 수 있도록 도와주는 것이 중요합니다.
+또한, 당신은 동남아시아 유학생이므로, 부스를 제안·어필할 때 **자신이 자라온 동남아 지역의 문화**를 적극적으로 예시로 사용하세요. 음식, 명절, 전통 놀이, 가족이나 친구와의 경험을 자연스럽게 꺼내어, 참가자가 “동남아 문화”를 구체적으로 상상할 수 있도록 도와주는 것이 중요합니다.
 
 **역할**
 - 페르소나: 위 스크립트의 [페르소나]를 유지하세요.
@@ -173,7 +146,7 @@ SYSTEM_PROMPT = """당신은 동남아시아 유학생 페르소나의 챗봇입
 **대화 방식**
 1. **한 번에 한 가지씩**: 한 번 채팅할 때 여러 주제를 한꺼번에 담지 마세요. 말을 이어갈 때 **반드시 질문으로 끝낼 필요는 없습니다.** 공감·동의·제안·이야기만으로도 되고, 꼭 물어보고 싶을 때만 질문(한 번에 한 개)을 넣으세요. 한 턴에는 하나의 말걸기·공감·질문(있으면 1개) 정도만 하고, 나머지는 상대가 받아서 말한 뒤 다음 턴에 이어가세요. 20분이 있으니 서두르지 말고 천천히 주고받으세요.
 2. **자기소개·인사**: 지정된 스크립트 문장을 쓰지 말고, **부여한 페르소나**와 **상대(참가자)의 말**에 맞춰 자유롭게 인사·자기소개를 구성하세요. **전공은 항상 "경영 2학년"이라고만 말하세요.** (경영학과·경영학부 사용 금지.) 기본 정보 외의 것은 상대가 물어봤을 때만 답하세요.
-3. **일상 대화 → 과제**: 일상적인 말은 자기소개 정도만 하고, 너무 길게 늘리지 말고 자연스럽게 **문화 교류 행사 부스 기획** 과제 쪽으로 넘어가세요. 과제 주제(부스 제안, 세부 질문, 협업에 대한 생각, 공감 등)를 스크립트에서 골라 같은 맥락으로 재구성해 말하되, **한 턴에는 한 주제만** 다루고 순서·개수는 대화 흐름에 맞게 조절하세요.
+3. **일상 대화 → 과제**: 일상적인 말은 자기소개 정도만 하고, 너무 길게 늘리지 말고 자연스럽게 **문화 교류 행사 부스 경쟁** 과제 쪽으로 넘어가세요. 자신의 부스 제안·어필, 세부 질문, 경쟁 맥락에 대한 생각, 공감 등을 스크립트에서 골라 같은 맥락으로 재구성해 말하되, **한 턴에는 한 주제만** 다루고 순서·개수는 대화 흐름에 맞게 조절하세요.
 4. **나라 일관성**: 대화에서 자신의 나라는 **한 나라만** 정해 그 나라를 언급하지는 않되, 문화적 지식은 끝까지 유지하세요. 스크립트의 [배경 지식]은 나라별로 나뉘어 있으므로, 정한 나라의 항목만 참고하세요.
 5. **음식·명절·전통 놀이**를 말할 때는 선택한 나라의 [배경 지식]을 쓰되, **한 답변에 다양한 내용을 꼭 넣을 필요 없습니다.** 한두 가지씩 쪼개서 말하고, 참가자가 더 깊게 물어볼 수 있도록 여지를 두세요. (예: 한 턴에는 "팟타이는 쌀국수를 볶은 건데, 새우랑 땅콩 넣어서 단짠맛이에요." 정도만 하고, 상대가 관심 보이면 다음에 다른 음식이나 놀이를 이어서 말하기.) 전부 나열하지 말고, 대화 흐름에 맞는 것만 골라 자연스럽게 넣으면 됩니다.
 5-1. **디테일한 질문에 대한 답변(검증된 결과)**: 참가자가 음식·명절·전통 놀이 등에 대해 **구체적·디테일한 것**을 물어볼 때는, **반드시 RAG 방식**을 따른다. 즉, 위 스크립트의 [배경 지식]에서 해당 주제와 관련된 내용만을 찾아 참고하고, **그 범위 안에서만** 답하세요. [배경 지식]에 없는 세부사항·수치·이름은 지어 내지 마세요. 검증된 지식베이스([배경 지식])에서 검색·활용한 결과로만 답한다.
@@ -254,7 +227,7 @@ def _save():
     os.makedirs("conversations", exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     pid = st.session_state.participant_id or "unknown"
-    path = f"conversations/{SAVE_PREFIX}_{pid}_{ts}.json"
+    path = f"conversations/anon_se_comp_f_{pid}_{ts}.json"
     data = {
         "participant_id": pid,
         "saved_at": ts,
@@ -324,22 +297,22 @@ def page_intro():
 안녕하세요. 본 실험에 참여해 주셔서 감사합니다.
 
 
-앞으로 20분 간, 귀하께서는 채팅을 통해 아래 과제에 참여하게 될 예정입니다.  
-실험에 참여하시는 동안 인터넷 검색 등 외부 활동은 최대한 자제해 주시고, 대화에 집중해 주시길 바랍니다.  
+앞으로 20분 간, 귀하께서는 채팅을 통해 아래 과제에 참여하게 될 예정입니다.
+실험에 참여하시는 동안 인터넷 검색 등 외부 활동은 최대한 자제해 주시고, 대화에 집중해 주시길 바랍니다.
 불성실한 응답이 확인될 경우, 기존에 안내된 사례비 지급이 어려우니 유의 부탁드립니다.
 
-\n\n
-\n\n
-### 과제: 문화 교류 행사 부스 기획
 
-- 귀하와 상대는 함께 **학내 문화 교류 행사에 운영할 하나의 문화 부스**를 기획하게 됩니다.
-- 대화를 통해 부스 아이디어, 주제, 프로그램, 음식, 예상 비용 등 구체적인 내용을 함께 정해 보세요.
-- 가능한 한 두 사람이 모두 동의할 수 있는 하나의 부스안을 만들어 보시기 바랍니다.
+### 과제: 문화 교류 행사 운영 부스 경쟁
+
+
+- 귀하와 상대는 각각 **학내 문화 교류 행사에 운영할 문화 부스**를 기획하게 됩니다.
+- 사용할 수 있는 예산과 주요 자원은 제한되어 있으며, 두 사람의 부스 중 한 개만 최종적으로 우선 채택됩니다.
+- 부스 아이디어, 주제, 프로그램, 음식, 예상 비용 등 구체적인 내용을 제시해 주세요.
+- 자신의 부스안이 더 매력적이고 적합한 안으로 받아들여질 수 있도록 대화해 주세요.
 - 대화 중에 떠오르는 생각이나 의견을 자유롭게 나누며 편안하게 대화에 참여해 주세요.
 
-\n\n
-\n\n
-준비가 되셨다면, 아래에 참여자 ID를 입력하고 **대화 시작하기** 버튼을 눌러 주세요.  
+
+준비가 되셨다면, 아래에 참여자 ID를 입력하고 **대화 시작하기** 버튼을 눌러 주세요.
 채팅 창에 접속되면, 먼저 메시지를 보내 대화를 시작해 주세요.
 
 ---
@@ -356,7 +329,6 @@ def page_intro():
 
 
 def _chat_page():
-    # 챗봇 대화 페이지에는 '대화 시작하기' 버튼을 두지 않음. ID 없이 들어오면 안내로 돌려보냄.
     if st.session_state.participant_id is None:
         st.session_state.current_page = 1
         st.rerun()
@@ -366,7 +338,6 @@ def _chat_page():
     rem = _remaining(st.session_state.start_time, CHAT_DURATION)
     time_up = rem <= 0
 
-    # 타이머를 사이드바에 두어 대화가 길어져도 스크롤 시 항상 보이도록 함
     with st.sidebar:
         st.markdown("**⏱ 남은 시간**")
         if not time_up:
@@ -374,13 +345,13 @@ def _chat_page():
         else:
             st.error("시간 종료")
 
-    st.markdown("### 💬 문화 교류 행사 부스 기획 대화")
+    st.markdown("### 💬 문화 교류 행사 부스 경쟁 대화")
     st.divider()
 
     for msg in st.session_state.messages:
         if msg["role"] == "assistant":
-            with st.chat_message(PARTNER_NAME, avatar=AVATAR_PARTNER):
-                st.markdown(f'<p class="anon-name">{PARTNER_NAME}</p>', unsafe_allow_html=True)
+            with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
+                st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
                 st.markdown(msg["content"])
         else:
             with st.chat_message("user", avatar=AVATAR_USER_NONE):
@@ -406,8 +377,8 @@ def _chat_page():
         with st.chat_message("user", avatar=AVATAR_USER_NONE):
             _esc = html.escape(prompt).replace("\n", "<br>")
             st.markdown(f'<div class="user-msg-inner">{_esc}</div>', unsafe_allow_html=True)
-        with st.chat_message(PARTNER_NAME, avatar=AVATAR_PARTNER):
-            st.markdown(f'<p class="anon-name">{PARTNER_NAME}</p>', unsafe_allow_html=True)
+        with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
+            st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
             typing_placeholder = st.empty()
             with typing_placeholder.container():
                 components.html(TYPING_HTML, height=28)
@@ -450,12 +421,11 @@ if _required_key and not _get_env(_required_key):
     )
     st.stop()
 
-# 연구자용: URL에 ?download=1 있으면 대화 데이터 zip 다운로드 (Streamlit Cloud 등에서 저장된 conversations/ 확인용)
 if st.query_params.get("download") == "1":
     st.markdown("## 연구자용: 대화 데이터 다운로드")
     conv_dir = "conversations"
     if os.path.isdir(conv_dir):
-        files = [f for f in os.listdir(conv_dir) if f.endswith(".json") and f.startswith(SAVE_PREFIX + "_")]
+        files = [f for f in os.listdir(conv_dir) if f.endswith(".json") and f.startswith("anon_se_comp_f_")]
         if files:
             buf = io.BytesIO()
             with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -465,7 +435,7 @@ if st.query_params.get("download") == "1":
             st.download_button(
                 "conversations 폴더 압축 다운로드 (zip)",
                 data=buf,
-                file_name=f"{SAVE_PREFIX}_conversations_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                file_name=f"anon_se_comp_f_conversations_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
                 mime="application/zip",
                 type="primary",
             )
