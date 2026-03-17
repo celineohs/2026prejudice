@@ -33,7 +33,22 @@ def upload_file_to_drive(file_path: str, get_env) -> tuple:
     try:
         creds_dict = json.loads(creds_json)
     except json.JSONDecodeError as e:
-        return False, f"GOOGLE_DRIVE_CREDENTIALS_JSON JSON 파싱 실패: {e}"
+        # "Invalid control character" = private_key 안에 실제 줄바꿈이 들어간 경우. TOML이 \n을 줄바꿈으로 바꿔서 생김 → 되돌려서 재시도
+        err_msg = str(e)
+        if "control character" in err_msg.lower():
+            fixed = creds_json.replace("\r\n", "\\n").replace("\r", "\\n").replace("\n", "\\n")
+            try:
+                creds_dict = json.loads(fixed)
+            except json.JSONDecodeError:
+                return False, (
+                    f"GOOGLE_DRIVE_CREDENTIALS_JSON JSON 파싱 실패: {e}. "
+                    "Secrets에서 private_key 값은 반드시 한 줄로, 줄바꿈은 \\n (백슬래시+n) 두 글자로 넣어주세요."
+                )
+        else:
+            return False, (
+                f"GOOGLE_DRIVE_CREDENTIALS_JSON JSON 파싱 실패: {e}. "
+                "Streamlit Secrets에는 JSON 전체를 한 줄로 넣고, 키 이름은 쌍따옴표(\")로 적어주세요."
+            )
 
     try:
         credentials = sa.Credentials.from_service_account_info(creds_dict)
