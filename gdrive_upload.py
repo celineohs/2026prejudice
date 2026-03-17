@@ -57,7 +57,7 @@ def upload_file_to_drive(file_path: str, get_env) -> tuple:
             return False, (
                 f"GOOGLE_DRIVE_CREDENTIALS_JSON JSON 파싱 실패: {e}. "
                 "Streamlit Secrets에는 JSON 전체를 한 줄로 넣고, 키 이름은 쌍따옴표(\")로 적어주세요. "
-                "여러 줄로 넣을 때는 """ 다음 줄바꿈 없이 바로 { 부터 적어보세요."
+                "여러 줄로 넣을 때는 따옴표 다음 줄바꿈 없이 바로 { 부터 적어보세요."
             )
 
     try:
