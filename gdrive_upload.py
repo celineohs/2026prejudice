@@ -7,6 +7,7 @@ get_env(key) 는 st.secrets / os.getenv 를 쓰는 앱의 _get_env 함수를 넘
 
 import json
 import os
+import re
 
 
 def upload_file_to_drive(file_path: str, get_env) -> tuple:
@@ -17,6 +18,8 @@ def upload_file_to_drive(file_path: str, get_env) -> tuple:
     """
     folder_id = (get_env("GOOGLE_DRIVE_FOLDER_ID") or "").strip()
     creds_json = (get_env("GOOGLE_DRIVE_CREDENTIALS_JSON") or "").strip()
+    # TOML """ 사용 시 맨 앞에 줄바꿈/BOM이 붙으면 "line 2 column 1" 파싱 오류 → 제거
+    creds_json = creds_json.lstrip("\n\r\t \ufeff").rstrip("\n\r\t ")
     if not folder_id or not creds_json:
         return False, "GOOGLE_DRIVE_FOLDER_ID 또는 GOOGLE_DRIVE_CREDENTIALS_JSON 미설정"
 
@@ -33,21 +36,28 @@ def upload_file_to_drive(file_path: str, get_env) -> tuple:
     try:
         creds_dict = json.loads(creds_json)
     except json.JSONDecodeError as e:
-        # "Invalid control character" = private_key 안에 실제 줄바꿈이 들어간 경우. TOML이 \n을 줄바꿈으로 바꿔서 생김 → 되돌려서 재시도
         err_msg = str(e)
+        creds_dict = None
+        # "Invalid control character" = private_key 안에 실제 줄바꿈 → 되돌려서 재시도
         if "control character" in err_msg.lower():
             fixed = creds_json.replace("\r\n", "\\n").replace("\r", "\\n").replace("\n", "\\n")
             try:
                 creds_dict = json.loads(fixed)
             except json.JSONDecodeError:
-                return False, (
-                    f"GOOGLE_DRIVE_CREDENTIALS_JSON JSON 파싱 실패: {e}. "
-                    "Secrets에서 private_key 값은 반드시 한 줄로, 줄바꿈은 \\n (백슬래시+n) 두 글자로 넣어주세요."
-                )
-        else:
+                pass
+        # "Expecting property name... line 2 column 1" = """ 다음 줄바꿈으로 { 뒤에 빈 줄/공백 들어간 경우
+        if creds_dict is None and ("Expecting property name" in err_msg or "line 2 column 1" in err_msg):
+            fixed = re.sub(r"^\{\s+", "{", creds_json, count=1)
+            if fixed != creds_json:
+                try:
+                    creds_dict = json.loads(fixed)
+                except json.JSONDecodeError:
+                    pass
+        if creds_dict is None:
             return False, (
                 f"GOOGLE_DRIVE_CREDENTIALS_JSON JSON 파싱 실패: {e}. "
-                "Streamlit Secrets에는 JSON 전체를 한 줄로 넣고, 키 이름은 쌍따옴표(\")로 적어주세요."
+                "Streamlit Secrets에는 JSON 전체를 한 줄로 넣고, 키 이름은 쌍따옴표(\")로 적어주세요. "
+                "여러 줄로 넣을 때는 """ 다음 줄바꿈 없이 바로 { 부터 적어보세요."
             )
 
     try:
