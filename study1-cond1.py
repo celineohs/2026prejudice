@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 study1-cond1: 익명 조건, 서유럽 유학생 챗봇과 문화 교류 행사 부스 기획 협업 대화 (20분)
-- study1-cond5와 동일 구조. 동남아 대신 서유럽(독일·프랑스·네덜란드·벨기에) 배경지식·페르소나.
 """
 
 import streamlit as st
@@ -373,7 +372,7 @@ def _chat_page():
             _go(3)
         return
 
-    effective_system = CMIC_SCRIPT + "\n\n" + SYSTEM_PROMPT
+    effective_system = SYSTEM_PROMPT + "\n\n[CMIC_CONTEXT]\n" + CMIC_SCRIPT
     if rem <= 60:
         effective_system = effective_system + "\n\n[현재] 대화 시간이 1분 남았습니다. 한두 문장으로 자연스럽게 마무리 인사해 주세요."
 

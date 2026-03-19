@@ -396,7 +396,7 @@ def _chat_page():
             _go(3)
         return
 
-    effective_system = CMIC_SCRIPT + "\n\n" + SYSTEM_PROMPT
+    effective_system = SYSTEM_PROMPT + "\n\n[CMIC_CONTEXT]\n" + CMIC_SCRIPT
     if rem <= 60:
         effective_system = effective_system + "\n\n[현재] 대화 시간이 1분 남았습니다. 한두 문장으로 자연스럽게 마무리 인사해 주세요."
 
