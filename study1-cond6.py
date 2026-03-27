@@ -490,13 +490,6 @@ def page_complete():
         _save()
         st.session_state.conversation_saved = True
     st.success("대화 기록이 안전하게 저장되었습니다.")
-    result = getattr(st.session_state, "gdrive_upload_result", None)
-    if result:
-        ok, msg = result
-        if ok:
-            st.caption("Google Drive에 업로드되었습니다.")
-        else:
-            st.warning(f"Google Drive 업로드 상태: {msg}")
 
 
 # ─── Main ───
