@@ -501,7 +501,6 @@ def page_complete():
     if not st.session_state.conversation_saved:
         _save()
         st.session_state.conversation_saved = True
-    st.success("대화 기록이 안전하게 저장되었습니다.")
 
 
 # ─── Main ───
