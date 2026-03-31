@@ -378,8 +378,8 @@ def _progress():
             else:
                 icon, color, weight = "○", "#adb5bd", "400"
             st.markdown(
-                f"<div style='text-align:center'><span style='color:{color};font-size:17px'>{icon}</span><br>"
-                f"<span style='font-size:11px;color:{color};font-weight:{weight}'>{lbl}</span></div>",
+                f"<div style='text-align:center'><span style='color:{color};font-size:19px'>{icon}</span><br>"
+                f"<span style='font-size:13px;color:{color};font-weight:{weight}'>{lbl}</span></div>",
                 unsafe_allow_html=True,
             )
     st.divider()
@@ -446,17 +446,20 @@ def _booth_idea_footer_fragment():
     if not can_submit:
         st.caption(f"**대화 시작하기**는 약 {wait_sec}초 후에 누를 수 있습니다 (1분 경과 후 제출 가능).")
     else:
-        st.caption("이제 **대화 시작하기**를 눌러 대화를 시작할 수 있습니다.")
+        st.caption("위 입력 창에 핵심 활동을 적으신 뒤 **대화 시작하기**를 누르면 대화가 시작됩니다.")
 
     if can_submit:
         if st.button("대화 시작하기", type="primary", use_container_width=True, key="booth_join_btn_fmt_c2"):
             idea = (st.session_state.get("booth_idea_core_fmt_c2") or "").strip()
-            st.session_state.participant_booth_idea = idea
-            st.session_state.start_time = datetime.now()
-            st.session_state.messages = []
-            st.session_state.conversation_saved = False
-            st.session_state.completed = False
-            _go(3)
+            if not idea:
+                st.error("위 입력 창에 부스의 핵심 활동을 적어 주신 뒤 다시 눌러 주세요.")
+            else:
+                st.session_state.participant_booth_idea = idea
+                st.session_state.start_time = datetime.now()
+                st.session_state.messages = []
+                st.session_state.conversation_saved = False
+                st.session_state.completed = False
+                _go(3)
     else:
         st.button(
             "대화 시작하기",
@@ -486,10 +489,11 @@ def page_booth_idea():
         unsafe_allow_html=True,
     )
     st.text_area(
-        "부스의 핵심 활동",
+        "부스 핵심 활동 입력",
         height=160,
         placeholder="이곳에 부스의 핵심 활동을 적어 주세요.",
         key="booth_idea_core_fmt_c2",
+        label_visibility="hidden",
     )
 
     _booth_idea_footer_fragment()
