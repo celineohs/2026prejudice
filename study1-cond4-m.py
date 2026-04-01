@@ -77,6 +77,8 @@ st.markdown(
 
 API_PROVIDER = (_get_env("API_PROVIDER") or "openai").lower()
 CHAT_DURATION = 15 * 60  # 15 minutes
+BOOTH_IDEA_DURATION_SEC = 120  # 부스 아이디어 구성 단계 전체 2분
+BOOTH_IDEA_SUBMIT_AFTER_SEC = 60  # 1분 경과 후 제출(대화 시작하기) 가능
 
 # ──────────────────────────────────────────────
 # 프롬프트: 섹션 포맷 ([ROLE]/[PERSONA PROFILE]/[TASK]/[RESPONSE RULES]), study1-cond2-format 계열
