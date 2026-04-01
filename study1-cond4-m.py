@@ -448,7 +448,8 @@ def page_intro():
 
 @st.fragment(run_every=timedelta(seconds=1))
 def _booth_idea_footer_fragment():
-    if st.session_state.get("current_page") != 3:
+    # 부스 아이디어 단계는 current_page == 2 (1=안내, 2=부스, 3=대화, 4=완료)
+    if st.session_state.get("current_page") != 2:
         return
     start = st.session_state.get("booth_idea_phase_start")
     if start is None:
