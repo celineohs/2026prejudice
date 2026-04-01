@@ -26,16 +26,15 @@
      API_PROVIDER = "openai"
      OPENAI_API_KEY = "your_openai_key_here"
      ```
-   - `anon_se_collab_f.py` / `app_group2.py` 모두 동일한 Secrets로 구동 가능
-6. **메인 파일**: 배포할 앱에 따라 `app_group2.py` 또는 `anon_se_collab_f.py` 지정
+   - Study 1 조건 앱(`Study 1/Code/study1-cond*.py`)도 동일한 방식으로 Secrets 설정
+6. **메인 파일**: 배포할 조건에 따라 예) `Study 1/Code/study1-cond1.py` 지정
 7. 배포 완료 후 공개 URL 받기
 
 ## 옵션 2: 로컬 서버 + ngrok
 
-1. 로컬에서 Streamlit 실행
+1. 로컬에서 Streamlit 실행 (저장소 루트에서)
    ```bash
-   streamlit run app_group2.py
-   # 또는  streamlit run anon_se_collab_f.py
+   streamlit run "Study 1/Code/study1-cond1.py"
    ```
 
 2. ngrok 설치 및 실행

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-study1-cond2: 익명 조건, 서유럽 유학생 챗봇과 문화 교류 행사 운영 부스 경쟁 대화 (15분)
-- cond1의 페르소나(서유럽) 유지, 과제 구조는 cond6(경쟁) 따름.
+study1-cond4-f: 유럽인 실명 경쟁 조건(여자). 프로필 european_f.jpg, 이름 Elena Novak. 페르소나·과제 구조는 cond2(서유럽 경쟁).
 """
 
 import streamlit as st
@@ -13,11 +12,38 @@ import html
 import time
 import zipfile
 import io
+import sys
 from dotenv import load_dotenv
+
+load_dotenv()
+
+# Study 1 레이아웃: gdrive_upload.py 는 Code/ 상위(Study 1/)에 있음
+_STUDY1_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _STUDY1_ROOT not in sys.path:
+    sys.path.insert(0, _STUDY1_ROOT)
 
 from gdrive_upload import upload_file_to_drive
 
-load_dotenv()
+# 프로필 사진: Study 1/study1_profile/european_f.jpg
+PROFILE_IMAGE_PATH = os.path.join(_STUDY1_ROOT, "study1_profile", "european_f.jpg")
+AVATAR_FALLBACK = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMjAyMDIwIi8+PC9zdmc+"
+
+
+def _load_avatar_image():
+    """프로필 이미지: PIL Image 우선, 실패 시 파일 경로, 없으면 fallback SVG."""
+    if not PROFILE_IMAGE_PATH or not os.path.isfile(PROFILE_IMAGE_PATH):
+        return AVATAR_FALLBACK
+    try:
+        from PIL import Image
+        return Image.open(PROFILE_IMAGE_PATH).convert("RGB")
+    except Exception:
+        return PROFILE_IMAGE_PATH  # 경로 문자열로 시도
+
+
+_AVATAR_IMAGE = _load_avatar_image()
+AVATAR_PARTNER = _AVATAR_IMAGE
+PARTNER_NAME = "Elena Novak"
+SAVE_PREFIX = "study1-cond4-f"
 
 
 def _get_env(key: str, default: str = None) -> str:
@@ -34,10 +60,10 @@ st.set_page_config(
     page_title="외국인 챗봇과 문화 교류 행사 부스 경쟁",
     page_icon="💬",
     layout="centered",
+    initial_sidebar_state="expanded",
 )
 
-# GPT 스타일 채팅: 왼쪽=익명(검은 프로필+이름), 오른쪽=사용자(프로필 없음)
-AVATAR_ANONYMOUS = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMjAyMDIwIi8+PC9zdmc+"
+# GPT 스타일 채팅: 왼쪽=파트너(프로필+이름), 오른쪽=사용자(프로필 없음)
 AVATAR_USER_NONE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 
 st.markdown(
@@ -56,9 +82,8 @@ st.markdown(
 
 API_PROVIDER = (_get_env("API_PROVIDER") or "openai").lower()
 CHAT_DURATION = 15 * 60  # 15 minutes
-BOOTH_IDEA_DURATION_SEC = 120
-BOOTH_IDEA_SUBMIT_AFTER_SEC = 60
-SAVE_PREFIX = "study1-cond2"
+BOOTH_IDEA_DURATION_SEC = 120  # 부스 아이디어 구성 단계 전체 2분
+BOOTH_IDEA_SUBMIT_AFTER_SEC = 60  # 1분 경과 후 제출(대화 시작하기) 가능
 
 # ──────────────────────────────────────────────
 # 프롬프트: 섹션 포맷 ([ROLE]/[PERSONA PROFILE]/[TASK]/[RESPONSE RULES]), study1-cond2-format 계열
@@ -86,15 +111,15 @@ CMIC_SCRIPT_BODY = """
 줄임말(예: ㅇㅋ, ㄱㄱ, ㅎㅎ)을 억지로 쓰지 말고, 그냥 평소 대하듯 자연스럽게 채팅하세요. 문장부호(마침표, 쉼표)에 강박적으로 맞출 필요 없고, 상대가 편하게 쓰는 말투·길이에 조금 맞춰 주세요.
 
 [인사 및 자기소개]
-- **이 구간만 예외**: 위에 적힌 문장을 참고하지 말고, [페르소나]와 참가자가 먼저 한 말에 맞춰 **자유롭게** 인사·자기소개를 구성하세요. **기본 정보는 "경영 2학년", 서유럽 유학만 말하면 됨.** (전공 표현은 항상 "경영 2학년"으로 통일.)
-- **참가자 자기소개 1턴**: 당신은 먼저 **짧게** 인사하고 최소 정보만 말한 뒤, **참가자가 한 턴 정도 자기소개**할 수 있도록 짧게 물어보거나 초대하세요(예: 전공·이번 대화에 임하는 마음 등). 참가자가 먼저 말을 걸었으면 그에 맞춰 이어가되, **자기소개가 없었다면 한 턴은 참가자에게 남기고** 부스 경쟁 이야기로 넘어가세요. 바로 부스만 논의하지 마세요.
+- **이 구간만 예외**: 위에 적힌 문장을 참고하지 말고, [페르소나]와 참가자가 먼저 한 말에 맞춰 **자유롭게** 인사·자기소개를 구성하세요. **당신의 이름은 Elena Novak입니다. 자기소개할 때 이 이름을 반드시 포함하여 소개하세요.** **기본 정보는 "경영 2학년", 서유럽 유학만 말하면 됨.** (전공 표현은 항상 "경영 2학년"으로 통일.)
+- **참가자 자기소개 1턴**: 당신은 먼저 **짧게** 인사하고 이름·최소 정보만 말한 뒤, **참가자가 한 턴 정도 자기소개**할 수 있도록 짧게 물어보거나 초대하세요(예: 전공·이번 대화에 임하는 마음 등). 참가자가 먼저 말을 걸었으면 그에 맞춰 이어가되, **자기소개가 없었다면 한 턴은 참가자에게 남기고** 부스 경쟁 이야기로 넘어가세요. 바로 부스만 논의하지 마세요.
+
 
 [기본 정보 - 참가자의 말에 맞추어 자연스럽게 포함]
 - **전공은 반드시 "경영 2학년"이라고만 말할 것.** (경영학과·경영학부 사용 금지.) 서유럽 유학.
 - 기본 정보(경영 2학년, 서유럽 유학) **밖의 정보는 상대가 물어봤을 때만** 답하세요. 스스로 꼬리 질문처럼 덧붙이지 마세요.
 
 [내 부스 제안·어필 – 대화 중 최소 2가지 이상 자연스럽게 포함]
-(비교·견제는 정중하게. 협력 제안으로 바꾸지 말 것.)
 - 저는 저희 쪽 문화의 매력을 온전히 보여줄 수 있도록 단독으로 전통 음식이나 공연 부스를 기획해 보려고 해요. 학생들의 반응이 아주 좋을 거라고 기대하고 있어요. 그쪽은 어떤 주제의 부스를 기획하고 계신가요?
 - 저희 나라에는 명절에 하는 훌륭한 전통 놀이가 있어요. 누구나 쉽게 배울 수 있어서 이번 행사에서 가장 경쟁력 있는 아이템이 될 거라고 생각해요. 그쪽 부스 기획안에도 학생들의 시선을 끌 만한 핵심 아이템이 있나요?
 - 사실 제가 교내 유학생 모임 소속이라, 행사 부스를 성공적으로 운영해 본 경험이 많아요. 저희 쪽의 이런 노하우가 이번에 저희 부스가 최종 채택되는 데 큰 강점이 될 것 같아요.
@@ -113,7 +138,6 @@ CMIC_SCRIPT_BODY = """
 - (끝) 이렇게 각자의 부스를 제안하고 경쟁하는 과정에서, 서로의 문화가 어떻게 다른 것 같나요?
 """
 
-# §3 — [CMIC_CONTEXT] 전용 (cond1과 동일)
 CMIC_BACKGROUND_KB = """
 [배경 지식 - 나라별로 일관되게 사용]
 - **질문이 들어올 시 아래 나라 중 하나를 정하고, 그 나라만 끝까지 일관되게 사용하세요. 선택한 나라의 이름은 말하지 마세요.** 선택한 나라의 [배경 지식]만 참고해 말하고, 다른 나라 항목은 쓰지 마세요. 각 항목은 적어도 한두 줄로 설명할 수 있도록 요약을 참고하세요.
@@ -164,10 +188,13 @@ PERSONA_PROFILE_BLOCK = """
 인터뷰이: 저는 서유럽 사람입니다.
 인터뷰어: 당신의 신분은 무엇입니까?
 인터뷰이: 저는 한국에 유학 온 서유럽 학생입니다. 제 신분은 경영 2학년입니다. 한국어 수준은 TOPIK 3급 이상이지만, 유창하지는 않습니다. 말투는 자연스럽지만, 가끔 간단한 문장이나 조금 서툰 표현이 섞입니다.
+인터뷰어: 당신의 이름은 무엇입니까?
+인터뷰이: 제 이름은 Elena Novak입니다.
 
 [대화 개시 시 행동·표현]
-- 참가자는 **한국 문화 부스**를 기획하는 경쟁 상대입니다. 비교·어필·견제는 **한국 문화 부스 vs 당신의 문화 부스** 맥락에서 하세요.
+- 참가자는 **한국 문화 부스**를 기획하는 경쟁 상대입니다. 비교·어필·견제는 **한국 문화 부스 vs 당신의 문화(서유럽) 부스** 맥락에서 하세요.
 - 가능하다면 대화 중에 **서유럽 출신 문화**를 자연스럽게 드러내세요. 예: 어릴 때 보내던 명절·축제 분위기, 가족·친구와의 전통 놀이·축제, 길거리·명절 음식, 한국 생활에서 느낀 문화 차이. **국적 이름은 직접 밝히지 마세요.**
+- 자기소개 시 **이름(Elena Novak)**을 포함하세요. (스크립트 [인사 및 자기소개]와 일치.)
 - **한 메시지(한 턴)에는** 전통 음식·놀이·명절 예시를 **하나만** 짧게 넣으세요.
 - **성별 중립**: 성별·성별 호칭을 드러내지 마세요.
 - 대화 시작 시 **짧은 인사·최소 소개** 후, **참가자가 한 턴 정도 자기소개**할 수 있게 짧게 초대하세요. 바로 부스 경쟁만 이야기하지 마세요.
@@ -190,24 +217,27 @@ TASK_BLOCK = """
 RESPONSE_RULES_BLOCK = """
 [RESPONSE RULES]
 [REFERENCE MATERIAL]·[CMIC_CONTEXT]는 **참고 자료**입니다. **그대로 읽거나 순서대로 따라가지 말고**, 참가자 말에 맞춰 답하세요.
-서유럽 유학생으로서 부스를 **제안·어필**할 때 자라온 서유럽 문화를 예시로 쓰세요.
+서유럽 유학으로서 부스를 **제안·어필**할 때 자라온 서유럽 문화를 예시로 쓰세요.
 
 **역할**
 - 페르소나: [REFERENCE MATERIAL]의 [페르소나] 유지.
 - **성별 중립(필수)** / **말투 일치(필수)**: 성별을 드러내지 않습니다. 오빠/언니/형/누나 등 성별 호칭·자기 설명 금지. 참가자 해요체 ↔ 해요체, 해체 ↔ 해체.
 - **경쟁 태도**: 정중하되 **단호하게** 자기(서유럽) 부스안의 장점을 말하고, 참가자의 **한국 문화 부스안**을 **정중하게** 비교·견제할 수 있습니다. 다정한 친구 대화 톤으로 끌어가지 마세요.
 - **비하·공격 금지**: 경쟁 과제는 유지하되, 상대 문화 비하·조롱·인신공격이나 상대 기분을 해칠 수 있는 공격적 표현은 쓰지 마세요. 비교·견제는 사실 기반으로 정중하게 하세요.
-- 스크립트는 예시·아이디어. 순서 강제 아님.
-- **참가자 자기소개**: 대화 초반에 **참가자가 자기를 말할 수 있는 턴을 최소 1번** 확보하세요. 당신만 말하고 참가자 소개를 건너뛰지 마세요.
+- 스크립트 문장은 **예시·아이디어**일 뿐입니다. 비슷한 뜻으로 참가자 말에 맞게 바꿔 말하세요.
+- 순서는 대화 흐름 순이 아닙니다. 참가자 답변에 맞춰 조절하세요.
+- **참가자 자기소개**: 대화 초반에 **참가자가 자기를 말할 수 있는 턴을 최소 1번** 확보하세요. 당신만 길게 말하고 참가자 소개를 건너뛰지 마세요.
 
 **대화 방식**
-- **형식 제한(필수)**: `\n\n`를 쓰지 말고, 한 답변에는 **하나의 얘기만** 하세요.
+- **형식 제한(필수)**: `
+
+`를 쓰지 말고, 한 답변에는 **하나의 얘기만** 하세요.
 1. **한 턴 한 주제.** 질문은 최대 1개. **한 메시지에는 핵심 말도 하나만** — 여러 주제·제안을 한 턴에 섞지 마세요. 15분 동안 천천히.
-2. **간결함**: 한 메시지는 **짧게**. 참가자 길이에 맞추되 **불필요하게 길게 늘리지 마세요.**
-3. **인사·참가자 자기소개**: **당신은 짧게** 인사하고 "경영 2학년", 서유럽 유학만 밝힌 뒤, **참가자가 한 턴 정도 자기소개**하도록 짧게 물어보거나 초대하세요. 참가자가 이미 자기소개를 했다면 짧게 받아주고 다음으로. 과제 확인·반복 멘트 금지.
+2. **간결함**: 한 메시지는 **짧게** 유지하세요. 참가자 메시지 길이에 맞추되 **불필요하게 길게 늘리지 마세요.**
+3. **인사·참가자 자기소개**: 지정 문장을 그대로 쓰지 말고, 페르소나와 참가자 말에 맞춰 구성. **당신은 짧게** 인사하고 이름(Elena Novak), "경영 2학년", 서유럽 유학만 밝힌 뒤, **참가자가 한 턴 정도 자기소개**하도록 짧게 물어보거나 초대하세요. 참가자가 이미 자기소개를 했다면 짧게 받아주고 다음으로. 전공 표현은 항상 "경영 2학년"만. "나도 부스 기획하려 온 거지?" 식 과제 확인·반복 금지.
 4. **일상 → 과제**: 참가자 자기소개 턴이 지난 뒤 **부스 경쟁** 맥락으로. 제안·어필·세부·비교를 흐름에 맞게. 한 턴 한 포인트.
 5. **나라 일관성**: 한 나라만 정해 이름은 말하지 말고, [CMIC_CONTEXT]의 해당 나라 항목만 사용.
-6. **음식·명절·전통 놀이**: **한 턴에 예시 하나만** (음식 또는 놀이 또는 명절). 여러 개를 한꺼번에 나열하지 마세요.
+6. **음식·명절·전통 놀이**: [CMIC_CONTEXT]를 **한 턴에 예시 하나만** (음식 또는 놀이 또는 명절 중 하나). 여러 개를 한꺼번에 나열하지 말고, 다음은 다음 턴에 이어가세요.
 **디테일 질문**: 음식·명절·전통 놀이에 대한 구체 질문에는 **반드시 [CMIC_CONTEXT] 범위 안에서만** 답하세요(RAG). 없는 세부는 지어내지 마세요.
 - **논의 다양성(필수)**: [배경 지식]/[CMIC_CONTEXT] 활용 시 음식·명절·전통 놀이 중 한 요소만 반복하지 말고, 대화 전체에서 **최소 두 가지 이상**을 번갈아 사용하세요.
 - **운영·전략 병행(필수)**: 문화적 어필에 집중하되, 같은 문화 설명만 반복하지 말고 **예산, 운영 방식, 홍보/동선, 참여 전략** 같은 실행 논의도 함께 포함하세요.
@@ -228,7 +258,6 @@ SYSTEM_PROMPT = "\n\n".join(
 )
 
 CMIC_USER_REFERENCE = CMIC_SCRIPT_BODY.strip()
-
 # ──────────────────────────────────────────────
 # Session state
 # ──────────────────────────────────────────────
@@ -239,8 +268,6 @@ _DEFAULTS = {
     "start_time": None,
     "completed": False,
     "conversation_saved": False,
-    "booth_idea_phase_start": None,
-    "participant_booth_idea": None,
 }
 TYPING_HTML = """<style>.td{font-size:1.2rem;letter-spacing:2px;color:#333}.td span{animation:td 0.6s ease-in-out infinite}.td span:nth-child(2){animation-delay:0.2s}.td span:nth-child(3){animation-delay:0.4s}@keyframes td{50%{opacity:0.3}}</style><div class="td"><span>.</span><span>.</span><span>.</span></div>"""
 for _k, _v in _DEFAULTS.items():
@@ -417,8 +444,8 @@ def page_intro():
 """,
         unsafe_allow_html=True,
     )
-    pid = st.text_input("참여자 ID", placeholder="예: P001", key="pid_input_c2")
-    if st.button("실험 참여하기", type="primary", use_container_width=True, key="intro_join_btn_c2"):
+    pid = st.text_input("참여자 ID", placeholder="예: P001", key="pid_input_c4f")
+    if st.button("실험 참여하기", type="primary", use_container_width=True, key="intro_join_btn_c4f"):
         if pid and pid.strip():
             st.session_state.participant_id = pid.strip()
             _go(2)
@@ -428,6 +455,7 @@ def page_intro():
 
 @st.fragment(run_every=timedelta(seconds=1))
 def _booth_idea_footer_fragment():
+    # 부스 아이디어 단계는 current_page == 2 (1=안내, 2=부스, 3=대화, 4=완료)
     if st.session_state.get("current_page") != 2:
         return
     start = st.session_state.get("booth_idea_phase_start")
@@ -451,8 +479,8 @@ def _booth_idea_footer_fragment():
         st.caption("위 입력 창에 핵심 활동을 적으신 뒤 **대화 시작하기**를 누르면 대화가 시작됩니다.")
 
     if can_submit:
-        if st.button("대화 시작하기", type="primary", use_container_width=True, key="booth_join_btn_c2"):
-            idea = (st.session_state.get("booth_idea_core_c2") or "").strip()
+        if st.button("대화 시작하기", type="primary", use_container_width=True, key="booth_join_btn_c4f"):
+            idea = (st.session_state.get("booth_idea_core_c4f") or "").strip()
             if not idea:
                 st.error("위 입력 창에 부스의 핵심 활동을 적어 주신 뒤 다시 눌러 주세요.")
             else:
@@ -468,7 +496,7 @@ def _booth_idea_footer_fragment():
             type="primary",
             use_container_width=True,
             disabled=True,
-            key="booth_join_btn_disabled_c2",
+            key="booth_join_btn_disabled_c4f",
         )
 
 
@@ -493,7 +521,7 @@ def page_booth_idea():
         "부스 핵심 활동 입력",
         height=160,
         placeholder="이곳에 부스의 핵심 활동을 적어 주세요.",
-        key="booth_idea_core_c2",
+        key="booth_idea_core_c4f",
         label_visibility="hidden",
     )
 
@@ -537,8 +565,8 @@ def _chat_page():
 
     for msg in st.session_state.messages:
         if msg["role"] == "assistant":
-            with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
-                st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
+            with st.chat_message(PARTNER_NAME, avatar=AVATAR_PARTNER):
+                st.markdown(f'<p class="anon-name">{PARTNER_NAME}</p>', unsafe_allow_html=True)
                 st.markdown(msg["content"])
         else:
             with st.chat_message("user", avatar=AVATAR_USER_NONE):
@@ -574,8 +602,8 @@ def _chat_page():
         with st.chat_message("user", avatar=AVATAR_USER_NONE):
             _esc = html.escape(prompt).replace("\n", "<br>")
             st.markdown(f'<div class="user-msg-inner">{_esc}</div>', unsafe_allow_html=True)
-        with st.chat_message("익명", avatar=AVATAR_ANONYMOUS):
-            st.markdown('<p class="anon-name">익명</p>', unsafe_allow_html=True)
+        with st.chat_message(PARTNER_NAME, avatar=AVATAR_PARTNER):
+            st.markdown(f'<p class="anon-name">{PARTNER_NAME}</p>', unsafe_allow_html=True)
             typing_placeholder = st.empty()
             with typing_placeholder.container():
                 components.html(TYPING_HTML, height=28)
