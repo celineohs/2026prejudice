@@ -1,0 +1,21 @@
+# thesis-study1 저장소 루트에 두는 Streamlit 설정 (subtree 푸시 시 리포 루트 .streamlit/ 이 됨)
+#
+# 라이트 톤 고정:
+# - base = "light"
+# - [theme.dark] 에도 라이트와 동일 색 → 설정에서 Dark를 골라도 화면이 어둡게 바뀌지 않음
+# (설정 메뉴의 테마 전환 자체를 없애는 공식 옵션은 없음)
+
+[theme]
+base = "light"
+
+[theme.light]
+primaryColor = "#FF4B4B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#31333F"
+
+[theme.dark]
+primaryColor = "#FF4B4B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#31333F"

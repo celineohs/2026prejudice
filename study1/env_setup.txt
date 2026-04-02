@@ -1,0 +1,43 @@
+환경변수 설정 방법:
+
+1. 프로젝트 루트 디렉토리에 .env 파일을 생성하세요.
+
+2. 사용할 API에 맞게 다음 중 하나를 입력하세요.
+
+   [OpenAI – app_group2 / anon_se_collab_f 공통]
+   API_PROVIDER=openai
+   OPENAI_API_KEY=your_openai_api_key_here
+   # OPENAI_MODEL=gpt-4o-mini   (선택사항)
+
+   [Claude (Anthropic) – app_group2 / anon_se_collab_f 공통]
+   API_PROVIDER=anthropic
+   ANTHROPIC_API_KEY=sk-ant-your-key-here
+   # ANTHROPIC_MODEL=claude-sonnet-4-20250514   (선택사항)
+
+   [Gemini]
+   API_PROVIDER=gemini
+   GEMINI_API_KEY=your_gemini_key_here
+   # GEMINI_MODEL=gemini-2.0-flash   (선택사항)
+
+3. API 키 발급처:
+   - OpenAI: https://platform.openai.com/api-keys
+   - Anthropic: https://console.anthropic.com/
+   - Gemini: https://ai.google.dev/
+
+4. Streamlit Cloud 배포 시에는 .env 대신 앱의 Settings → Secrets에
+   위와 동일한 키 이름으로 값을 입력하세요 (예: API_PROVIDER, ANTHROPIC_API_KEY).
+
+[Google Drive – 대화 로그 자동 저장 (anon_se_collab_f)]
+- 실험 종료 시 대화 JSON이 지정한 구글 드라이브 폴더에 바로 업로드됩니다.
+- 설정 방법:
+  (1) Google Cloud Console에서 프로젝트 생성 → API 및 서비스 → 사용자 인증 정보 → 서비스 계정 생성 → 키 추가(JSON)로 키 파일 다운로드.
+  (2) Google Drive API 사용 설정: API 및 서비스 → 라이브러리에서 "Google Drive API" 검색 후 사용 설정.
+  (3) 구글 드라이브에 폴더 하나 만들고, 해당 폴더를 서비스 계정 이메일(키 JSON 안 client_email)과 "편집자"로 공유.
+  (4) 폴더 URL에서 폴더 ID 복사 (예: https://drive.google.com/drive/folders/1abc...xyz → 1abc...xyz 부분).
+  (5) Streamlit Secrets에 추가:
+      GOOGLE_DRIVE_CREDENTIALS_JSON = '''  (키 파일 전체 내용 붙여넣기, 한 줄이면 따옴표 하나로 가능)
+      '''
+      GOOGLE_DRIVE_FOLDER_ID = "위에서 복사한 폴더 ID"
+- 로컬에서는 .env에 동일 키 이름으로 넣으면 됩니다 (CREDENTIALS_JSON은 한 줄로 minify하거나 따옴표 이스케이프).
+
+주의: .env 파일은 절대 Git에 커밋하지 마세요. 이미 .gitignore에 포함되어 있습니다.
