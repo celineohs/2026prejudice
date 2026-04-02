@@ -60,7 +60,8 @@ st.markdown(
 )
 
 API_PROVIDER = (_get_env("API_PROVIDER") or "openai").lower()
-CHAT_DURATION = 15 * 60  # 15 minutes
+MIN_CHAT_DURATION = 15 * 60  # minimum 15 minutes
+MAX_CHAT_DURATION = 20 * 60  # maximum 20 minutes
 BOOTH_IDEA_DURATION_SEC = 120
 BOOTH_IDEA_SUBMIT_AFTER_SEC = 60
 SAVE_PREFIX = "study1-cond5"
@@ -329,7 +330,7 @@ def _poll_chat_deadline():
     st_t = st.session_state.get("start_time")
     if st_t is None:
         return
-    if _remaining(st_t, CHAT_DURATION) > 0:
+    if _remaining(st_t, MAX_CHAT_DURATION) > 0:
         return
     if not st.session_state.conversation_saved:
         _save()
@@ -398,7 +399,7 @@ def page_intro():
 <p style="{_ip}">실험에 참여하시는 동안 인터넷 검색 등 외부 활동은 최대한 자제해 주시고, 대화에 집중해 주시길 바랍니다.</p>
 <p style="{_ip}">불성실한 응답이 확인될 경우 기존에 안내된 사례비 지급이 어려우니 유의 부탁드립니다.</p>
 
-<p style="{_ip}">앞으로 귀하께서는 <strong>15분간 외국인 유학생 챗봇과 함께</strong> 아래 과제에 참여하게 될 예정입니다.</p>
+<p style="{_ip}">앞으로 귀하께서는 <strong>최소 15분, 최대 20분간 외국인 유학생 챗봇과 함께</strong> 아래 과제에 참여하게 될 예정입니다.</p>
 
 ### 과제: 글로벌 문화 교류 행사 부스 기획
 
@@ -505,8 +506,10 @@ def _chat_page():
     _progress()
     if st.session_state.start_time is None:
         st.session_state.start_time = datetime.now()
-    rem = _remaining(st.session_state.start_time, CHAT_DURATION)
-    time_up = rem <= 0
+    elapsed = (datetime.now() - st.session_state.start_time).total_seconds()
+    rem_to_max = _remaining(st.session_state.start_time, MAX_CHAT_DURATION)
+    time_up = rem_to_max <= 0
+    can_finish = elapsed >= MIN_CHAT_DURATION
 
     if not time_up:
         _poll_chat_deadline()
@@ -525,7 +528,7 @@ def _chat_page():
         st.divider()
         st.markdown("**⏱ 남은 시간**")
         if not time_up:
-            _render_timer(rem)
+            _render_timer(rem_to_max)
         else:
             st.error("시간 종료")
 
@@ -563,7 +566,7 @@ def _chat_page():
         + "\n\n[CMIC_CONTEXT]\n"
         + CMIC_BACKGROUND_KB
     )
-    if rem <= 60:
+    if rem_to_max <= 60:
         effective_system = effective_system + "\n\n[현재] 대화 시간이 1분 남았습니다. 한두 문장으로 자연스럽게 마무리 인사해 주세요."
 
     # 첫 진입 시 타이핑 효과를 먼저 보여주고, 챗봇의 선인사를 생성
@@ -583,6 +586,15 @@ def _chat_page():
             typing_placeholder.markdown(first_reply)
             st.session_state.messages.append({"role": "assistant", "content": first_reply})
         # keep header/title stable without full rerun
+
+    if can_finish:
+        st.caption("최소 15분이 경과했습니다. 원하시면 지금 실험을 종료할 수 있습니다.")
+        if st.button("실험 종료하기 →", type="secondary", use_container_width=True):
+            if not st.session_state.conversation_saved:
+                _save()
+                st.session_state.conversation_saved = True
+            _go(4)
+            return
 
     prompt = st.chat_input("메시지를 입력하세요...")
 

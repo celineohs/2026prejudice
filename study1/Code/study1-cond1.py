@@ -440,7 +440,7 @@ def _booth_idea_footer_fragment():
     st.divider()
     st.markdown("**⏱ 부스 아이디어 작성 시간** (총 2분)")
     if rem > 0:
-        _render_timer(rem_to_max)
+        _render_timer(rem)
     else:
         st.warning("안내 시간(2분)이 지났습니다. 준비가 되셨다면 **대화 시작하기**로 대화를 시작해 주세요.")
 
