@@ -594,7 +594,7 @@ def _chat_page():
             first_reply = get_ai_response(primer_messages, effective_system)
             typing_placeholder.markdown(first_reply)
             st.session_state.messages.append({"role": "assistant", "content": first_reply})
-        st.rerun()
+        # keep header/title stable without full rerun
 
     prompt = st.chat_input("메시지를 입력하세요...")
 
@@ -611,7 +611,7 @@ def _chat_page():
             reply = get_ai_response(st.session_state.messages, effective_system)
             typing_placeholder.markdown(reply)
             st.session_state.messages.append({"role": "assistant", "content": reply})
-        st.rerun()
+        # response already rendered in-place; avoid flicker from rerun
 
 
 def page_complete():
