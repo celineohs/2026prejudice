@@ -58,7 +58,7 @@ def _get_env(key: str, default: str = None) -> str:
 
 
 st.set_page_config(
-    page_title="외국인 챗봇과 문화 교류 행사 부스 기획",
+    page_title="외국인 챗봇과 글로벌 문화 교류 행사 부스 기획",
     page_icon="💬",
     layout="centered",
     initial_sidebar_state="expanded",
@@ -543,7 +543,7 @@ def _chat_page():
         st.markdown("### 과제 목표")
         st.markdown(
             """
-**문화 교류 행사 부스 기획**
+**글로벌 문화 교류 행사 부스 기획**
 
 - 귀하는 외국인 유학생 챗봇과 함께 **하나의 문화 부스**를 기획합니다. **한국 문화**를 중심적으로 생각해 주세요.
 - 대화로 부스 아이디어·주제·프로그램·음식·예상 비용 등을 함께 정합니다.
@@ -558,7 +558,7 @@ def _chat_page():
         else:
             st.error("시간 종료")
 
-    st.markdown("### 💬 문화 교류 행사 부스 기획")
+    st.markdown("### 💬 글로벌 문화 교류 행사 부스 기획")
     st.divider()
 
     for msg in st.session_state.messages:
