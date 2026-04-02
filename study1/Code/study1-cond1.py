@@ -566,13 +566,21 @@ def _chat_page():
     if rem <= 60:
         effective_system = effective_system + "\n\n[현재] 대화 시간이 1분 남았습니다. 한두 문장으로 자연스럽게 마무리 인사해 주세요."
 
+    prompt = st.chat_input("메시지를 입력하세요...")
+
     # 채팅 시작 시 챗봇이 먼저 짧게 인사하도록 한 턴 생성
     if not st.session_state.messages:
-        first_reply = get_ai_response([], effective_system)
+        primer_messages = [
+            {
+                "role": "user",
+                "content": "대화를 시작합니다. 먼저 짧게 인사하고 이름/최소 정보를 말한 뒤, 참가자가 자기소개할 수 있게 한 문장으로 물어봐 주세요.",
+            }
+        ]
+        first_reply = get_ai_response(primer_messages, effective_system)
         st.session_state.messages.append({"role": "assistant", "content": first_reply})
         st.rerun()
 
-    if prompt := st.chat_input("메시지를 입력하세요..."):
+    if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user", avatar=AVATAR_USER_NONE):
             _esc = html.escape(prompt).replace("\n", "<br>")
