@@ -509,7 +509,7 @@ def _chat_page():
     elapsed = (datetime.now() - st.session_state.start_time).total_seconds()
     rem_to_max = _remaining(st.session_state.start_time, MAX_CHAT_DURATION)
     time_up = rem_to_max <= 0
-    can_finish = elapsed >= MIN_CHAT_DURATION
+    can_finish = (rem_to_max <= 5 * 60) and (not time_up)
 
     if not time_up:
         _poll_chat_deadline()
@@ -541,6 +541,16 @@ def _chat_page():
             _render_timer(rem_to_max)
         else:
             st.error("시간 종료")
+
+        st.divider()
+        st.markdown("**실험 종료**")
+        st.caption("남은 시간이 5분 이하일 때, 대화 종료하기 버튼이 활성화됩니다.")
+        if st.button("대화 종료하기", type="secondary", use_container_width=True, disabled=(not can_finish)):
+            if not st.session_state.conversation_saved:
+                _save()
+                st.session_state.conversation_saved = True
+            _go(4)
+            return
 
     st.markdown("### 💬 글로벌 문화 교류 행사 부스 기획")
     st.divider()
@@ -585,15 +595,6 @@ def _chat_page():
             typing_placeholder.markdown(first_reply)
             st.session_state.messages.append({"role": "assistant", "content": first_reply})
         # keep header/title stable without full rerun
-
-    if can_finish:
-        st.caption("최소 15분이 경과했습니다. 원하시면 지금 실험을 종료할 수 있습니다.")
-        if st.button("실험 종료하기 →", type="secondary", use_container_width=True):
-            if not st.session_state.conversation_saved:
-                _save()
-                st.session_state.conversation_saved = True
-            _go(4)
-            return
 
     prompt = st.chat_input("메시지를 입력하세요...")
 
