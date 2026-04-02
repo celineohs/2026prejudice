@@ -510,6 +510,27 @@ def _chat_page():
 
     if not time_up:
         _poll_chat_deadline()
+    # docs/CMIC_PROMPT_SPLIT.md: SYSTEM + [REFERENCE MATERIAL] + [CMIC_CONTEXT](배경 지식만)
+    effective_system = (
+        SYSTEM_PROMPT
+        + "\n\n[REFERENCE MATERIAL]\n"
+        + CMIC_USER_REFERENCE
+        + "\n\n[CMIC_CONTEXT]\n"
+        + CMIC_BACKGROUND_KB
+    )
+    if rem <= 60:
+        effective_system = effective_system + "\n\n[현재] 대화 시간이 1분 남았습니다. 한두 문장으로 자연스럽게 마무리 인사해 주세요."
+
+    # 대화 진입 첫 렌더에서 챗봇 선인사를 미리 생성해 깜빡임 없이 바로 표시
+    if (not time_up) and (not st.session_state.messages):
+        primer_messages = [
+            {
+                "role": "user",
+                "content": "대화를 시작합니다. 먼저 짧게 인사하고 이름/최소 정보를 말한 뒤, 참가자가 자기소개할 수 있게 한 문장으로 물어봐 주세요.",
+            }
+        ]
+        first_reply = get_ai_response(primer_messages, effective_system)
+        st.session_state.messages.append({"role": "assistant", "content": first_reply})
 
     with st.sidebar:
         st.markdown("### 과제 목표")
@@ -555,30 +576,7 @@ def _chat_page():
             _go(4)
         return
 
-    # docs/CMIC_PROMPT_SPLIT.md: SYSTEM + [REFERENCE MATERIAL] + [CMIC_CONTEXT](배경 지식만)
-    effective_system = (
-        SYSTEM_PROMPT
-        + "\n\n[REFERENCE MATERIAL]\n"
-        + CMIC_USER_REFERENCE
-        + "\n\n[CMIC_CONTEXT]\n"
-        + CMIC_BACKGROUND_KB
-    )
-    if rem <= 60:
-        effective_system = effective_system + "\n\n[현재] 대화 시간이 1분 남았습니다. 한두 문장으로 자연스럽게 마무리 인사해 주세요."
-
     prompt = st.chat_input("메시지를 입력하세요...")
-
-    # 채팅 시작 시 챗봇이 먼저 짧게 인사하도록 한 턴 생성
-    if not st.session_state.messages:
-        primer_messages = [
-            {
-                "role": "user",
-                "content": "대화를 시작합니다. 먼저 짧게 인사하고 이름/최소 정보를 말한 뒤, 참가자가 자기소개할 수 있게 한 문장으로 물어봐 주세요.",
-            }
-        ]
-        first_reply = get_ai_response(primer_messages, effective_system)
-        st.session_state.messages.append({"role": "assistant", "content": first_reply})
-        st.rerun()
 
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
