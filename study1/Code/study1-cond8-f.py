@@ -81,9 +81,9 @@ st.markdown(
 )
 
 API_PROVIDER = (_get_env("API_PROVIDER") or "openai").lower()
-CHAT_DURATION = 15 * 60  # 15 minutes
-MIN_CHAT_DURATION = CHAT_DURATION
-MAX_CHAT_DURATION = CHAT_DURATION
+MIN_CHAT_DURATION = 15 * 60  # minimum 15 minutes (end button enabled after)
+MAX_CHAT_DURATION = 20 * 60  # maximum 20 minutes (timer counts down from this)
+CHAT_DURATION = MAX_CHAT_DURATION  # saved metadata / prompt pacing ceiling
 BOOTH_IDEA_DURATION_SEC = 120  # 부스 아이디어 구성 단계 전체 2분
 BOOTH_IDEA_SUBMIT_AFTER_SEC = 60  # 1분 경과 후 제출(대화 시작하기) 가능
 _END_CHAT_SAVE_WARNING = (
@@ -92,7 +92,9 @@ _END_CHAT_SAVE_WARNING = (
     "버튼을 누르지 않고 창을 닫을 경우, 실험에 참여하지 않으신 것으로 간주됩니다."
     "</p>"
 )
-_FINISH_CAPTION_15 = "최소 15분이 지난 뒤 **대화 종료하기** 버튼이 활성화됩니다."
+_FINISH_CAPTION_15_20 = (
+    "최소 15분이 지난 뒤 **대화 종료하기** 버튼이 활성화됩니다. (대화는 최대 20분까지 가능합니다)"
+)
 
 # ──────────────────────────────────────────────
 # 프롬프트: 섹션 포맷 ([ROLE]/[PERSONA PROFILE]/[TASK]/[RESPONSE RULES]), study1-cond2-format 계열
@@ -241,7 +243,7 @@ RESPONSE_RULES_BLOCK = """
 - **형식 제한(필수)**: `
 
 `를 쓰지 말고, 한 답변에는 **하나의 얘기만** 하세요.
-1. **한 턴 한 주제.** 질문은 최대 1개. **한 메시지에는 핵심 말도 하나만** — 여러 주제·제안을 한 턴에 섞지 마세요. 15분 동안 천천히.
+1. **한 턴 한 주제.** 질문은 최대 1개. **한 메시지에는 핵심 말도 하나만** — 여러 주제·제안을 한 턴에 섞지 마세요. 15분에서 20분 동안 천천히.
 2. **간결함**: 한 메시지는 **짧게** 유지하세요. 참가자 메시지 길이에 맞추되 **불필요하게 길게 늘리지 마세요.**
 3. **인사·참가자 자기소개**: 지정 문장을 그대로 쓰지 말고, 페르소나와 참가자 말에 맞춰 구성. **당신은 짧게** 인사하고 이름(Ayu Lestari), "경영 2학년", 동남아시아 유학만 밝힌 뒤, **참가자가 한 턴 정도 자기소개**하도록 짧게 물어보거나 초대하세요. 참가자가 이미 자기소개를 했다면 짧게 받아주고 다음으로. 전공 표현은 항상 "경영 2학년"만. "나도 부스 기획하려 온 거지?" 식 과제 확인·반복 금지.
 4. **일상 → 과제**: 참가자 자기소개 턴이 지난 뒤 **부스 경쟁** 맥락으로. 제안·어필·세부·비교를 흐름에 맞게. 한 턴 한 포인트.
@@ -348,6 +350,7 @@ def _save():
         "saved_at": ts,
         "start_time": st.session_state.start_time.isoformat() if st.session_state.start_time else None,
         "duration_setting_sec": MAX_CHAT_DURATION,
+        "min_chat_duration_sec": MIN_CHAT_DURATION,
         "participant_booth_idea": st.session_state.get("participant_booth_idea"),
         "messages": st.session_state.messages,
     }
@@ -433,7 +436,7 @@ def page_intro():
 <p style="{_ip}">실험에 참여하시는 동안 인터넷 검색 등 외부 활동은 최대한 자제해 주시고, 대화에 집중해 주시길 바랍니다.</p>
 <p style="{_ip}">불성실한 응답이 확인될 경우 기존에 안내된 사례비 지급이 어려우니 유의 부탁드립니다.</p>
 
-<p style="{_ip}">앞으로 귀하께서는 <strong>15분간 외국인 유학생 챗봇과</strong> 아래 과제에 참여하게 될 예정입니다.</p>
+<p style="{_ip}">앞으로 귀하께서는 <strong>15분에서 20분 동안 외국인 유학생 챗봇과</strong> 아래 과제에 참여하게 될 예정입니다.</p>
 
 ### 과제: 글로벌 문화 교류 행사 부스 경쟁
 
@@ -570,7 +573,7 @@ def _chat_page():
 
         st.divider()
         st.markdown("**대화 종료**")
-        st.caption(_FINISH_CAPTION_15)
+        st.caption(_FINISH_CAPTION_15_20)
         st.markdown(_END_CHAT_SAVE_WARNING, unsafe_allow_html=True)
         if st.button(
             "대화 종료하기",
