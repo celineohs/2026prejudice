@@ -40,6 +40,7 @@ st.set_page_config(
     page_title="외국인 챗봇과 글로벌 문화 교류 행사 부스 경쟁",
     page_icon="💬",
     layout="centered",
+    initial_sidebar_state="expanded",
 )
 
 # GPT 스타일 채팅: 왼쪽=익명(검은 프로필+이름), 오른쪽=사용자(프로필 없음)
@@ -61,11 +62,19 @@ st.markdown(
 )
 
 API_PROVIDER = (_get_env("API_PROVIDER") or "openai").lower()
-MIN_CHAT_DURATION = 15 * 60  # minimum 15 minutes
-MAX_CHAT_DURATION = 20 * 60  # maximum 20 minutes
+CHAT_DURATION = 15 * 60  # 15 minutes
+MIN_CHAT_DURATION = CHAT_DURATION
+MAX_CHAT_DURATION = CHAT_DURATION
 BOOTH_IDEA_DURATION_SEC = 120
 BOOTH_IDEA_SUBMIT_AFTER_SEC = 60
 SAVE_PREFIX = "study1-cond6"
+_END_CHAT_SAVE_WARNING = (
+    '<p style="color:#c00;font-size:0.85rem;font-weight:600;line-height:1.45;margin:0.35em 0 0 0;">'
+    "<strong>대화 종료하기</strong> 버튼을 눌러야만 데이터가 저장됩니다. "
+    "버튼을 누르지 않고 창을 닫을 경우, 실험에 참여하지 않으신 것으로 간주됩니다."
+    "</p>"
+)
+_FINISH_CAPTION_15 = "최소 15분이 지난 뒤 **대화 종료하기** 버튼이 활성화됩니다."
 
 # ──────────────────────────────────────────────
 # 프롬프트: 섹션 포맷 ([ROLE]/[PERSONA PROFILE]/[TASK]/[RESPONSE RULES]), study1-cond2-format 계열
@@ -108,12 +117,12 @@ CMIC_SCRIPT_BODY = """
 - 한정된 행사 지원금 외에도 저희 쪽 커뮤니티나 대사관의 후원을 추가로 받아내어 저희 부스 기획안의 완성도를 높이는 데 집중하려고 해요. 그쪽은 기획안을 위해 따로 예산이나 자원을 확보할 방안이 있으신가요?
 
 
-[부스 세부 제안 – 대화 중 최소 2개 이상 자연스럽게 포함]
-- 학생들을 더 많이 유치하려면 입장료 책정도 중요할 텐데, 그쪽은 얼마로 하실 계획인가요? 저희는 가격 경쟁력 면에서 더 유리하게 책정하려고 합니다.
+[부스 세부 제안 – 대화 중 자연스럽게 포함]
+- 학생들을 더 많이 유치하려면 입장료 책정도 중요할 텐데, 그쪽은 얼마로 하실 계획인가요?
 - 저희는 대중적이면서도 독창적인 전통 음식을 제공할 계획인데, 그쪽은 어떤 메뉴로 경쟁하실 건가요?
 
 
-[부스 경쟁 맥락 – 대화 흐름에 맞춰 자연스럽게 포함]
+[경쟁에 대한 질문 – 대화 흐름에 맞춰 모두 포함]
 - (시작) 이렇게 각자의 부스 기획안으로 경쟁하게 된 것에 대해 어떻게 생각하세요?
 - (중간) 학생들은 저희 두 부스 기획안 중 어느 쪽을 더 매력적이라고 평가할까요?
 - (중간2) 학생들이 두 부스 중 하나를 선택해야 한다면, 어떤 점을 기준으로 선택하게 될 것 같으세요?
@@ -316,7 +325,7 @@ def _save():
         "participant_id": pid,
         "saved_at": ts,
         "start_time": st.session_state.start_time.isoformat() if st.session_state.start_time else None,
-        "duration_setting_sec": CHAT_DURATION,
+        "duration_setting_sec": MAX_CHAT_DURATION,
         "participant_booth_idea": st.session_state.get("participant_booth_idea"),
         "messages": st.session_state.messages,
     }
@@ -329,7 +338,7 @@ def _save():
 
 @st.fragment(run_every=timedelta(seconds=1))
 def _poll_chat_deadline():
-    """대화 페이지에서만 주기 실행: 시간 종료 시 로컬 저장·Drive 업로드 후 st.rerun (브라우저 전체 새로고침 없음)."""
+    """대화 페이지: MAX_CHAT_DURATION 도달 시 UI 갱신용 rerun(저장은 대화 종료하기에서만)."""
     if st.session_state.get("current_page") != 3:
         return
     if st.session_state.get("conversation_saved"):
@@ -339,10 +348,6 @@ def _poll_chat_deadline():
         return
     if _remaining(st_t, MAX_CHAT_DURATION) > 0:
         return
-    if not st.session_state.conversation_saved:
-        _save()
-        st.session_state.conversation_saved = True
-    st.session_state.completed = True
     st.rerun()
 
 
@@ -406,7 +411,7 @@ def page_intro():
 <p style="{_ip}">실험에 참여하시는 동안 인터넷 검색 등 외부 활동은 최대한 자제해 주시고, 대화에 집중해 주시길 바랍니다.</p>
 <p style="{_ip}">불성실한 응답이 확인될 경우 기존에 안내된 사례비 지급이 어려우니 유의 부탁드립니다.</p>
 
-<p style="{_ip}">앞으로 귀하께서는 <strong>15분에서 20분 동안 외국인 유학생 챗봇과</strong> 아래 과제에 참여하게 될 예정입니다.</p>
+<p style="{_ip}">앞으로 귀하께서는 <strong>15분간 외국인 유학생 챗봇과</strong> 아래 과제에 참여하게 될 예정입니다.</p>
 
 ### 과제: 글로벌 문화 교류 행사 부스 경쟁
 
@@ -517,7 +522,6 @@ def _chat_page():
     elapsed = (datetime.now() - st.session_state.start_time).total_seconds()
     rem_to_max = _remaining(st.session_state.start_time, MAX_CHAT_DURATION)
     time_up = rem_to_max <= 0
-    can_finish = (rem_to_max <= 5 * 60) and (not time_up)
 
     if not time_up:
         _poll_chat_deadline()
@@ -542,9 +546,16 @@ def _chat_page():
             st.error("시간 종료")
 
         st.divider()
-        st.markdown("**실험 종료**")
-        st.caption("남은 시간이 5분 이하일 때, 대화 종료하기 버튼이 활성화됩니다.")
-        if st.button("대화 종료하기", type="secondary", use_container_width=True, disabled=(not can_finish)):
+        st.markdown("**대화 종료**")
+        st.caption(_FINISH_CAPTION_15)
+        st.markdown(_END_CHAT_SAVE_WARNING, unsafe_allow_html=True)
+        if st.button(
+            "대화 종료하기",
+            type="primary",
+            use_container_width=True,
+            disabled=(elapsed < MIN_CHAT_DURATION),
+            key="sidebar_end_c6",
+        ):
             if not st.session_state.conversation_saved:
                 _save()
                 st.session_state.conversation_saved = True
@@ -565,12 +576,13 @@ def _chat_page():
                 st.markdown(f'<div class="user-msg-inner">{_esc}</div>', unsafe_allow_html=True)
 
     if time_up:
-        if not st.session_state.conversation_saved:
-            _save()
-            st.session_state.conversation_saved = True
         st.session_state.completed = True
-        st.info("⏰ 대화 시간이 종료되었습니다. 수고하셨습니다.\n\n아래 버튼을 눌러 마무리해 주세요.")
-        if st.button("실험 마무리 →", type="primary", use_container_width=True):
+        st.info(
+            "⏰ 대화 가능 시간이 모두 지났습니다. 수고하셨습니다.\n\n"
+            "아래 **대화 종료하기**를 눌러 데이터를 저장한 뒤 마무리해 주세요."
+        )
+        st.markdown(_END_CHAT_SAVE_WARNING, unsafe_allow_html=True)
+        if st.button("대화 종료하기", type="primary", use_container_width=True, key="main_end_c6"):
             if not st.session_state.conversation_saved:
                 _save()
                 st.session_state.conversation_saved = True
@@ -606,7 +618,7 @@ def _chat_page():
             st.session_state.messages.append({"role": "assistant", "content": first_reply})
         # keep header/title stable without full rerun
 
-    prompt = st.chat_input("메시지를 입력하세요...")
+    prompt = st.chat_input("메시지를 입력하세요...", disabled=time_up)
 
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})

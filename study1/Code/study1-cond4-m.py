@@ -85,6 +85,15 @@ MIN_CHAT_DURATION = 15 * 60  # minimum 15 minutes
 MAX_CHAT_DURATION = 20 * 60  # maximum 20 minutes
 BOOTH_IDEA_DURATION_SEC = 120  # 부스 아이디어 구성 단계 전체 2분
 BOOTH_IDEA_SUBMIT_AFTER_SEC = 60  # 1분 경과 후 제출(대화 시작하기) 가능
+_END_CHAT_SAVE_WARNING = (
+    '<p style="color:#c00;font-size:0.85rem;font-weight:600;line-height:1.45;margin:0.35em 0 0 0;">'
+    "<strong>대화 종료하기</strong> 버튼을 눌러야만 데이터가 저장됩니다. "
+    "버튼을 누르지 않고 창을 닫을 경우, 실험에 참여하지 않으신 것으로 간주됩니다."
+    "</p>"
+)
+_FINISH_CAPTION_15_20 = (
+    "최소 15분이 지난 뒤 **대화 종료하기** 버튼이 활성화됩니다. (대화는 최대 20분까지 가능합니다)"
+)
 
 # ──────────────────────────────────────────────
 # 프롬프트: 섹션 포맷 ([ROLE]/[PERSONA PROFILE]/[TASK]/[RESPONSE RULES]), study1-cond2-format 계열
@@ -150,7 +159,7 @@ CMIC_BACKGROUND_KB = """
 [독일]
 - **음식**: (1) 브레첼: 굵은 소금을 뿌린 겉이 바삭한 밀가루 빵, 비어가르텐이나 길거리에서 흔히 먹음. (2) 브라트부르스트: 독일식 소시지를 구워 겨자와 함께 먹는 길거리·축제 음식. (3) 슈페츨레: 계란 밀가루 반죽을 채로 눌러 만든 면 요리, 그라탕이나 스튜와 함께 먹음.
 - **명절**: (1) 옥토버페스트: 9월 말~10월 초 뮌헨 등에서 열리는 맥주 축제, 전통복장을 입고 맥주·음식을 나눔. (2) 크리스마스: 12월 아드벤츠 칼렌더(대림절 달력)·크리스마스 마켓, 가족이 모여 트리 장식·음식 나눔.
-- **전통 놀이**: (1) 슈플라틀러: 바바리안 지방의 전통 포크 댄스로, 발을 구르거나 손뼉을 치며 신발 밑창이나 허벅지, 무릎 등을 두드리는 춤. (2) 토프슐라겐: 냄비 찾기 놀이로, 냄비 속에 사탕 등 선물을 숨기고 안대로 눈을 가린 다음 막대기로 바닥을 치면서 냄비를 찾는 놀이.
+- **전통 놀이**: (1) 슈플라틀러: 바바리안 지방의 전통 포크 댄스로, 발을 구르거나 손뼉을 치며 신발 밑창이나 허벅지, 무릎 등을 두드리는 춤. (2) 토프슐라겐: 냄비 속에 사탕 등 선물을 숨기고 안대로 눈을 가린 다음 막대기로 바닥을 치면서 냄비를 찾는 놀이.
 ---
 [프랑스]
 - **음식**: (1) 크루아상: 버터 반죽을 겹겹이 해서 구운 아침 빵. (2) 크레이프: 얇은 밀가루 전병에 달콤한·짭짤한 소를 넣어 먹는 음식. (3) 부야베스: 마르세유 지역의 생선 수프, 여러 해산물과 허브를 넣어 끓임.
@@ -337,7 +346,8 @@ def _save():
         "participant_id": pid,
         "saved_at": ts,
         "start_time": st.session_state.start_time.isoformat() if st.session_state.start_time else None,
-        "duration_setting_sec": CHAT_DURATION,
+        "duration_setting_sec": MAX_CHAT_DURATION,
+        "min_chat_duration_sec": MIN_CHAT_DURATION,
         "participant_booth_idea": st.session_state.get("participant_booth_idea"),
         "messages": st.session_state.messages,
     }
@@ -350,7 +360,7 @@ def _save():
 
 @st.fragment(run_every=timedelta(seconds=1))
 def _poll_chat_deadline():
-    """대화 페이지에서만 주기 실행: 시간 종료 시 로컬 저장·Drive 업로드 후 st.rerun (브라우저 전체 새로고침 없음)."""
+    """대화 페이지: MAX_CHAT_DURATION 도달 시 UI 갱신용 rerun(저장은 대화 종료하기에서만)."""
     if st.session_state.get("current_page") != 3:
         return
     if st.session_state.get("conversation_saved"):
@@ -360,10 +370,6 @@ def _poll_chat_deadline():
         return
     if _remaining(st_t, MAX_CHAT_DURATION) > 0:
         return
-    if not st.session_state.conversation_saved:
-        _save()
-        st.session_state.conversation_saved = True
-    st.session_state.completed = True
     st.rerun()
 
 
@@ -427,7 +433,7 @@ def page_intro():
 <p style="{_ip}">실험에 참여하시는 동안 인터넷 검색 등 외부 활동은 최대한 자제해 주시고, 대화에 집중해 주시길 바랍니다.</p>
 <p style="{_ip}">불성실한 응답이 확인될 경우 기존에 안내된 사례비 지급이 어려우니 유의 부탁드립니다.</p>
 
-<p style="{_ip}">앞으로 귀하께서는 <strong>15분에서 20분 동안 외국인 유학생 챗봇과</strong> 아래 과제에 참여하게 될 예정입니다.</p>
+<p style="{_ip}">앞으로 귀하께서는 <strong>최소 15분, 최대 20분간 외국인 유학생 챗봇과</strong> 아래 과제에 참여하게 될 예정입니다.</p>
 
 ### 과제: 글로벌 문화 교류 행사 부스 경쟁
 
@@ -539,7 +545,6 @@ def _chat_page():
     elapsed = (datetime.now() - st.session_state.start_time).total_seconds()
     rem_to_max = _remaining(st.session_state.start_time, MAX_CHAT_DURATION)
     time_up = rem_to_max <= 0
-    can_finish = (rem_to_max <= 5 * 60) and (not time_up)
 
     if not time_up:
         _poll_chat_deadline()
@@ -564,9 +569,16 @@ def _chat_page():
             st.error("시간 종료")
 
         st.divider()
-        st.markdown("**실험 종료**")
-        st.caption("남은 시간이 5분 이하일 때, 대화 종료하기 버튼이 활성화됩니다.")
-        if st.button("대화 종료하기", type="secondary", use_container_width=True, disabled=(not can_finish)):
+        st.markdown("**대화 종료**")
+        st.caption(_FINISH_CAPTION_15_20)
+        st.markdown(_END_CHAT_SAVE_WARNING, unsafe_allow_html=True)
+        if st.button(
+            "대화 종료하기",
+            type="primary",
+            use_container_width=True,
+            disabled=(elapsed < MIN_CHAT_DURATION),
+            key="sidebar_end_c4m",
+        ):
             if not st.session_state.conversation_saved:
                 _save()
                 st.session_state.conversation_saved = True
@@ -587,12 +599,13 @@ def _chat_page():
                 st.markdown(f'<div class="user-msg-inner">{_esc}</div>', unsafe_allow_html=True)
 
     if time_up:
-        if not st.session_state.conversation_saved:
-            _save()
-            st.session_state.conversation_saved = True
         st.session_state.completed = True
-        st.info("⏰ 대화 시간이 종료되었습니다. 수고하셨습니다.\n\n아래 버튼을 눌러 마무리해 주세요.")
-        if st.button("실험 마무리 →", type="primary", use_container_width=True):
+        st.info(
+            "⏰ 대화 가능 시간이 모두 지났습니다. 수고하셨습니다.\n\n"
+            "아래 **대화 종료하기**를 눌러 데이터를 저장한 뒤 마무리해 주세요."
+        )
+        st.markdown(_END_CHAT_SAVE_WARNING, unsafe_allow_html=True)
+        if st.button("대화 종료하기", type="primary", use_container_width=True, key="main_end_c4m"):
             if not st.session_state.conversation_saved:
                 _save()
                 st.session_state.conversation_saved = True
@@ -628,7 +641,7 @@ def _chat_page():
             st.session_state.messages.append({"role": "assistant", "content": first_reply})
         # keep header/title stable without full rerun
 
-    prompt = st.chat_input("메시지를 입력하세요...")
+    prompt = st.chat_input("메시지를 입력하세요...", disabled=time_up)
 
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
