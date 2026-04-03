@@ -68,9 +68,9 @@ BOOTH_IDEA_DURATION_SEC = 120
 BOOTH_IDEA_SUBMIT_AFTER_SEC = 60
 SAVE_PREFIX = "study1-cond5"
 _END_CHAT_SAVE_WARNING = (
-    '<p style="color:#c00;font-size:0.85rem;font-weight:600;line-height:1.45;margin:0.35em 0 0 0;">'
-    "<strong>대화 종료하기</strong> 버튼을 눌러야만 데이터가 저장됩니다. "
-    "버튼을 누르지 않고 창을 닫을 경우, 실험에 참여하지 않으신 것으로 간주됩니다."
+    '<p style="color:#c00;font-size:0.85rem;font-weight:600;line-height:1.45;margin:0.65em 0 0.65em 0;">'
+    "<strong>대화 종료하기</strong> 버튼을 누르시고, <strong>완료</strong> 화면이 나온 경우에만 데이터가 저장됩니다. "
+    "버튼을 누르지 않거나, <strong>완료</strong> 화면으로 넘어가기 전에 창을 닫을 경우, 실험에 참여하지 않으신 것으로 간주되어 보상 지급이 어렵습니다."
     "</p>"
 )
 _FINISH_CAPTION_15_20 = (
@@ -316,10 +316,14 @@ def _save():
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     pid = st.session_state.participant_id or "unknown"
     path = f"conversations/{SAVE_PREFIX}_{pid}_{ts}.json"
+    _st = st.session_state.start_time
+    _now = datetime.now()
     data = {
         "participant_id": pid,
         "saved_at": ts,
-        "start_time": st.session_state.start_time.isoformat() if st.session_state.start_time else None,
+        "start_time": _st.isoformat() if _st else None,
+        "chat_end_time": _now.isoformat(),
+        "chat_elapsed_sec": round((_now - _st).total_seconds(), 2) if _st else None,
         "duration_setting_sec": MAX_CHAT_DURATION,
         "min_chat_duration_sec": MIN_CHAT_DURATION,
         "participant_booth_idea": st.session_state.get("participant_booth_idea"),
@@ -334,13 +338,23 @@ def _save():
 
 @st.fragment(run_every=timedelta(seconds=1))
 def _poll_chat_deadline():
-    """대화 페이지: MAX_CHAT_DURATION 도달 시 UI 갱신용 rerun(저장은 대화 종료하기에서만)."""
+    """대화 페이지: 최소 대화 시간 경과 시 종료 버튼 활성화, 최대 시간 도달 시 UI 갱신을 위해 rerun."""
     if st.session_state.get("current_page") != 3:
         return
     if st.session_state.get("conversation_saved"):
         return
     st_t = st.session_state.get("start_time")
     if st_t is None:
+        return
+    start_iso = st_t.isoformat()
+    if st.session_state.get("_chat_poll_start_iso") != start_iso:
+        st.session_state._chat_poll_start_iso = start_iso
+        st.session_state._min_chat_full_rerun_done = False
+
+    elapsed = (datetime.now() - st_t).total_seconds()
+    if elapsed >= MIN_CHAT_DURATION and not st.session_state.get("_min_chat_full_rerun_done"):
+        st.session_state._min_chat_full_rerun_done = True
+        st.rerun()
         return
     if _remaining(st_t, MAX_CHAT_DURATION) > 0:
         return
