@@ -55,6 +55,9 @@ st.markdown(
     .anon-name { font-size: 1.2rem !important; font-weight: 600 !important; margin-bottom: 0.2rem !important; margin-top: 0 !important; line-height: 1.2 !important; }
     [data-testid="stChatMessage"] .anon-name + * { margin-top: 0.2rem !important; }
     [data-testid="stChatMessage"]:has(.user-msg-inner) { max-width: 80% !important; margin-left: auto !important; margin-right: 0 !important; width: 80% !important; box-sizing: border-box !important; }
+    /* 사이드바 최소 너비 (메인 채팅 영역보다 여전히 좁게 보이는 수준) */
+    [data-testid="stSidebar"] { min-width: 420px !important; }
+    [data-testid="stSidebar"] > div:first-child { width: 420px !important; min-width: 420px !important; max-width: 480px !important; }
     </style>
     """,
     unsafe_allow_html=True,
