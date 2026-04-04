@@ -539,7 +539,7 @@ def page_booth_idea():
     _mb = "margin:0 0 1em 0;"
     st.markdown(
         f'<p style="{_mb}">대화를 시작하기 전에, 축제 부스 아이디어를 간단히 생각해주세요.</p>'
-        f'<p style="{_mb}">아래 창에 **부스에 반영할 한국 문화의 핵심 활동**을 적어 주세요.</p>'
+        f'<p style="{_mb}">아래 창에 <strong>부스에 반영할 한국 문화의 핵심 활동</strong>을 적어 주세요.</p>'
         "<p style='margin:0;'>부스 아이디어 작성이 끝난 뒤, 하단의 <strong>대화 시작하기</strong> 버튼을 누르시면 "
         "외국인 유학생 챗봇과의 대화가 시작됩니다.</p>",
         unsafe_allow_html=True,
