@@ -79,6 +79,7 @@ st.markdown(
     /* 사이드바 최소 너비 (메인 채팅 영역보다 여전히 좁게 보이는 수준) */
     [data-testid="stSidebar"] { min-width: 420px !important; }
     [data-testid="stSidebar"] > div:first-child { width: 420px !important; min-width: 420px !important; max-width: 480px !important; }
+    p.study1-intro-casefee { color: #c00 !important; font-weight: 700 !important; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -99,6 +100,11 @@ _END_CHAT_SAVE_WARNING = (
 )
 _FINISH_CAPTION_15_20 = (
     "최소 15분이 지난 뒤 **대화 종료하기** 버튼이 활성화됩니다. (대화는 최대 20분까지 가능합니다)"
+)
+_INTRO_CASEFEE_NOTICE_HTML = (
+    '<p class="study1-intro-casefee" style="line-height:1.45;margin:0 0 1em 0;">'
+    "불성실한 응답이 확인될 경우 기존에 안내된 사례비 지급이 어려우니 유의 부탁드립니다."
+    "</p>"
 )
 
 # ──────────────────────────────────────────────
@@ -448,8 +454,13 @@ def page_intro():
 <p style="{_ip}">안녕하세요. 본 실험에 참여해 주셔서 감사합니다.</p>
 
 <p style="{_ip}">실험에 참여하시는 동안 인터넷 검색 등 외부 활동은 최대한 자제해 주시고, 대화에 집중해 주시길 바랍니다.</p>
-<p style="{_ip}color:#c00;font-weight:700;">불성실한 응답이 확인될 경우 기존에 안내된 사례비 지급이 어려우니 유의 부탁드립니다.</p>
 
+""",
+        unsafe_allow_html=True,
+    )
+    st.markdown(_INTRO_CASEFEE_NOTICE_HTML, unsafe_allow_html=True)
+    st.markdown(
+        f"""
 <p style="{_ip}">앞으로 귀하께서는 <strong>15분에서 20분 동안 외국인 유학생 챗봇과 함께</strong> 아래 과제에 참여하게 될 예정입니다.</p>
 
 ### 과제: 글로벌 문화 교류 행사 부스 기획
