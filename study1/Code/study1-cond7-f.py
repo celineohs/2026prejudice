@@ -88,6 +88,7 @@ API_PROVIDER = (_get_env("API_PROVIDER") or "openai").lower()
 MIN_CHAT_DURATION = 15 * 60  # minimum 15 minutes (end button enabled after)
 MAX_CHAT_DURATION = 20 * 60  # maximum 20 minutes (timer counts down from this)
 CHAT_DURATION = MAX_CHAT_DURATION  # saved metadata / prompt pacing ceiling
+CHAT_PROMPT_NO_WRAP_UNTIL_SEC = 16 * 60  # 조기 마무리 방지 [현재] 프롬프트 기준; 종료 버튼은 MIN_CHAT_DURATION(15분)
 BOOTH_IDEA_DURATION_SEC = 120
 BOOTH_IDEA_SUBMIT_AFTER_SEC = 60
 _END_CHAT_SAVE_WARNING = (
@@ -253,7 +254,7 @@ RESPONSE_RULES_BLOCK = """
 
 7. **말투·형식**: 존댓말 매칭, 불필요한 느낌표 금지, 한 메시지는 한 단락. 모든 답변이 질문으로 끝날 필요 없음.
 8. 1분 남았다는 안내가 있으면 새 주제 없이 짧게 마무리.
-9. **조기 마무리 금지**: 시스템에 ‘1분 남음’ 안내가 붙기 전에는, **대화를 끝낸 듯한** 결론·작별 인사를 하지 마세요. **최소 대화 시간(15분) 이전**에 `[현재]` 안내가 붙으면, 그에 따라 새 화두(세부·질문·비교 각도 등 과제에 맞게)를 한 턴에 하나씩 던져 대화가 끊기지 않게 하세요.
+9. **조기 마무리 금지**: 시스템에 ‘1분 남음’ 안내가 붙기 전에는, **대화를 끝낸 듯한** 결론·작별 인사를 하지 마세요. **대화 시작 후 16분 이전**에 `[현재]` 안내가 붙으면, 그에 따라 새 화두(세부·질문·비교 각도 등 과제에 맞게)를 한 턴에 하나씩 던져 대화가 끊기지 않게 하세요.
 
 **한 턴 분할 예시** (이름·활동은 예시일 뿐, 그대로 읽지 마세요.)
 **한 메시지**에 (1) 상대가 꺼낸 활동에 대한 질문, (2) 내 문화 예시, (3) 또 다른 제안을 **한꺼번에 넣지 마세요.**
@@ -638,9 +639,9 @@ def _chat_page():
         + "\n\n[CMIC_CONTEXT]\n"
         + CMIC_BACKGROUND_KB
     )
-    if rem_to_max > 60 and elapsed < MIN_CHAT_DURATION:
+    if rem_to_max > 60 and elapsed < CHAT_PROMPT_NO_WRAP_UNTIL_SEC:
         effective_system = effective_system + (
-            "\n\n[현재] 아직 최소 대화 시간(15분) 이전입니다. "
+            "\n\n[현재] 아직 16분 이전입니다. "
             "결론 정리·작별 인사·‘대화가 충분하다’는 식의 마무리는 하지 마세요. "
             "과제에 맞게 새로운 화두(비교 각도·세부·질문 등)를 한 턴에 하나씩 던져 대화가 끊기지 않게 하세요."
         )
